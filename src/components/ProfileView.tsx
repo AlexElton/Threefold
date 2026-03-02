@@ -17,28 +17,27 @@ interface LifetimeStats {
   disciplineCounts: Record<string, number>;
 }
 
-export function ProfileView() {
+interface ProfileViewProps {
+  profileData: ProfileData | null;
+  onProfileUpdate: (name: string | null) => void;
+}
+
+export function ProfileView({ profileData, onProfileUpdate }: ProfileViewProps) {
   const { user, signOut } = useAuth();
-  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [stats, setStats] = useState<LifetimeStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [nameInput, setNameInput] = useState('');
+  const [nameInput, setNameInput] = useState(profileData?.full_name ?? '');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [profileRes, workoutsRes] = await Promise.all([
-        supabase.from('profiles').select('full_name, current_ctl, current_atl, created_at').eq('id', user.id).maybeSingle(),
-        supabase.from('workouts').select('discipline, duration_minutes, tss').eq('user_id', user.id),
-      ]);
-
-      if (profileRes.data) {
-        setProfile(profileRes.data);
-        setNameInput(profileRes.data.full_name ?? '');
-      }
+      const workoutsRes = await supabase
+        .from('workouts')
+        .select('discipline, duration_minutes, tss')
+        .eq('user_id', user.id);
 
       if (workoutsRes.data) {
         const ww = workoutsRes.data;
@@ -51,8 +50,7 @@ export function ProfileView() {
           disciplineCounts: counts,
         });
       }
-
-      setLoading(false);
+      setStatsLoading(false);
     };
     load();
   }, [user]);
@@ -68,7 +66,7 @@ export function ProfileView() {
     if (error) {
       setSaveError('Failed to save. Please try again.');
     } else {
-      setProfile(p => p ? { ...p, full_name: nameInput.trim() || null } : p);
+      onProfileUpdate(nameInput.trim() || null);
       setIsEditing(false);
     }
     setSaving(false);
@@ -82,11 +80,11 @@ export function ProfileView() {
     return `${h}h ${m}m`;
   };
 
-  const memberSince = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const memberSince = profileData?.created_at
+    ? new Date(profileData.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : null;
 
-  const initials = (profile?.full_name ?? user?.email ?? '??')
+  const initials = (profileData?.full_name ?? user?.email ?? '??')
     .split(/\s+/)
     .map(s => s[0]?.toUpperCase() ?? '')
     .slice(0, 2)
@@ -98,14 +96,6 @@ export function ProfileView() {
     run: 'bg-green-100 text-green-700',
     strength: 'bg-violet-100 text-violet-700',
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 text-slate-400 text-sm">
-        Loading profile…
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-2xl space-y-4 sm:space-y-5">
@@ -139,7 +129,7 @@ export function ProfileView() {
                     {saving ? 'Saving…' : 'Save'}
                   </button>
                   <button
-                    onClick={() => { setIsEditing(false); setNameInput(profile?.full_name ?? ''); setSaveError(''); }}
+                    onClick={() => { setIsEditing(false); setNameInput(profileData?.full_name ?? ''); setSaveError(''); }}
                     className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 text-xs font-medium text-slate-600 hover:border-slate-400 transition"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -151,7 +141,7 @@ export function ProfileView() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="text-lg font-bold text-slate-900">
-                    {profile?.full_name ?? <span className="text-slate-400 font-normal">No name set</span>}
+                    {profileData?.full_name ?? <span className="text-slate-400 font-normal">No name set</span>}
                   </div>
                   <div className="flex items-center gap-1.5 mt-1 text-sm text-slate-500">
                     <Mail className="w-3.5 h-3.5" />
@@ -178,7 +168,11 @@ export function ProfileView() {
       </div>
 
       {/* Lifetime stats */}
-      {stats && (
+      {statsLoading ? (
+        <div className="bg-white border border-slate-200 p-5 sm:p-6">
+          <div className="text-sm text-slate-400">Loading stats…</div>
+        </div>
+      ) : stats && (
         <div className="bg-white border border-slate-200 p-5 sm:p-6">
           <h2 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <User className="w-4 h-4 text-slate-400" />

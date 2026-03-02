@@ -11,6 +11,7 @@ import { WorkoutDetailModal } from './WorkoutDetailModal';
 import logo from '../img/logo(text).png';
 
 type Page = 'dashboard' | 'calendar' | 'analysis' | 'profile';
+type ProfileData = { full_name: string | null; current_ctl: number; current_atl: number; created_at: string };
 
 const NAV_ITEMS: { page: Page; label: string; icon: React.ElementType }[] = [
   { page: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,6 +27,7 @@ export function Dashboard() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
@@ -94,25 +96,32 @@ export function Dashboard() {
   const loadWorkouts = useCallback(async () => {
     if (!user) return;
 
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
-    const endDate = new Date(year, month + 2, 0).toISOString().split('T')[0];
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const fmtDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-    const { data, error } = await supabase
-      .from('workouts')
-      .select('*')
-      .eq('user_id', user.id)
-      .gte('date', startDate)
-      .lte('date', endDate)
-      .order('date');
+    const from = new Date();
+    from.setDate(from.getDate() - 90);
+    const to = new Date();
+    to.setDate(to.getDate() + 90);
 
-    if (!error && data) {
-      setWorkouts(data);
-      checkRunVolumeIncrease(data);
+    const [workoutsRes, profileRes] = await Promise.all([
+      supabase
+        .from('workouts')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', fmtDate(from))
+        .lte('date', fmtDate(to))
+        .order('date'),
+      supabase.from('profiles').select('full_name, current_ctl, current_atl, created_at').eq('id', user.id).maybeSingle(),
+    ]);
+
+    if (!workoutsRes.error && workoutsRes.data) {
+      setWorkouts(workoutsRes.data);
+      checkRunVolumeIncrease(workoutsRes.data);
     }
+    if (profileRes.data) setProfileData(profileRes.data as ProfileData);
     setLoading(false);
-  }, [user, currentMonth, checkRunVolumeIncrease]);
+  }, [user, checkRunVolumeIncrease]);
 
 
 
@@ -202,7 +211,7 @@ export function Dashboard() {
       </header>
 
       <main className="max-w-[1500px] mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        {page === 'dashboard' && <DashboardView />}
+        {page === 'dashboard' && <DashboardView workouts={workouts} profileName={profileData?.full_name ?? null} />}
 
         {page === 'calendar' && (
           <CalendarView
@@ -233,9 +242,14 @@ export function Dashboard() {
           />
         )}
 
-        {page === 'analysis' && <AnalyticsView />}
+        {page === 'analysis' && <AnalyticsView workouts={workouts} />}
 
-        {page === 'profile' && <ProfileView />}
+        {page === 'profile' && (
+          <ProfileView
+            profileData={profileData}
+            onProfileUpdate={(name) => setProfileData(p => p ? { ...p, full_name: name } : p)}
+          />
+        )}
       </main>
 
       <WorkoutDetailModal

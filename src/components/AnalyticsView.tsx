@@ -1,30 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
 import { Workout } from '../types';
 
-export function AnalyticsView() {
-  const { user } = useAuth();
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    const fetch = async () => {
-      const from = new Date();
-      from.setDate(from.getDate() - 84);
-      const { data } = await supabase
-        .from('workouts')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('date', `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`)
-        .order('date');
-      if (data) setWorkouts(data);
-      setLoading(false);
-    };
-    fetch();
-  }, [user]);
+export function AnalyticsView({ workouts }: { workouts: Workout[] }) {
 
   const [selectedSport, setSelectedSport] = useState<'swim' | 'bike' | 'run' | 'strength' | 'all'>('all');
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(11);
@@ -117,14 +95,6 @@ export function AnalyticsView() {
     `M ${getX(0).toFixed(2)} ${(padTop + plotH).toFixed(2)} ` +
     vals.map((v, i) => `L ${getX(i).toFixed(2)} ${getY(v).toFixed(2)}`).join(' ') +
     ` L ${getX(vals.length - 1).toFixed(2)} ${(padTop + plotH).toFixed(2)} Z`;
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 text-slate-400 text-sm">
-        Loading analytics…
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4 sm:space-y-5">

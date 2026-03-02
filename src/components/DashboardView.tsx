@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Clock, Zap, Dumbbell, TrendingUp, TrendingDown, CalendarDays, CheckCircle2, Circle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
 import { Workout } from '../types';
 
 const DISCIPLINE_COLORS: Record<string, string> = {
@@ -55,39 +53,8 @@ function computeTrainingLoad(workouts: Workout[]) {
   return { ctl, atl, tsb: ctl - atl };
 }
 
-export function DashboardView() {
+export function DashboardView({ workouts, profileName }: { workouts: Workout[]; profileName: string | null }) {
   const { user } = useAuth();
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [profileName, setProfileName] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    const load = async () => {
-      const from = new Date();
-      from.setDate(from.getDate() - 60);
-
-      // Fetch past 60 days + 30 days future for upcoming
-      const future = new Date();
-      future.setDate(future.getDate() + 30);
-
-      const [workoutsRes, profileRes] = await Promise.all([
-        supabase
-          .from('workouts')
-          .select('*')
-          .eq('user_id', user.id)
-          .gte('date', localDateStr(from))
-          .lte('date', localDateStr(future))
-          .order('date'),
-        supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
-      ]);
-
-      if (workoutsRes.data) setWorkouts(workoutsRes.data);
-      if (profileRes.data?.full_name) setProfileName(profileRes.data.full_name);
-      setLoading(false);
-    };
-    load();
-  }, [user]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -155,19 +122,11 @@ export function DashboardView() {
     ? { label: 'Recovering', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' }
     : { label: 'Optimal Form', color: 'text-green-600', bg: 'bg-green-50 border-green-200' };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 text-slate-400 text-sm">
-        Loading dashboard…
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
       {/* Greeting */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{greeting}{firstName ? `, ${firstName}` : ''}.</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{greeting}{firstName ? `, ${firstName}` : ''}</h1>
         <p className="text-sm text-slate-500 mt-0.5">
           {today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
