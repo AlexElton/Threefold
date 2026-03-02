@@ -57,36 +57,36 @@ export interface Profile {
 }
 
 export const INTENSITY_COLORS: Record<Intensity, string> = {
-  endurance: 'bg-blue-500',
-  threshold: 'bg-emerald-500',
-  intervals: 'bg-orange-500',
-  recovery: 'bg-slate-400',
+  endurance: 'bg-green-600',
+  threshold: 'bg-orange-600',
+  intervals: 'bg-red-600',
+  recovery: 'bg-slate-500',
   technique: 'bg-blue-600',
-  upper_body: 'bg-rose-500',
-  lower_body: 'bg-amber-500',
-  core: 'bg-purple-500',
+  upper_body: 'bg-slate-300',
+  lower_body: 'bg-slate-300',
+  core: 'bg-slate-300',
 };
 
 export const INTENSITY_BORDER_COLORS: Record<Intensity, string> = {
-  endurance: 'border-blue-500',
-  threshold: 'border-emerald-500',
-  intervals: 'border-orange-500',
-  recovery: 'border-slate-400',
+  endurance: 'border-green-600',
+  threshold: 'border-orange-600',
+  intervals: 'border-red-600',
+  recovery: 'border-slate-500',
   technique: 'border-blue-600',
-  upper_body: 'border-rose-500',
-  lower_body: 'border-amber-500',
-  core: 'border-purple-500',
+  upper_body: 'border-slate-300',
+  lower_body: 'border-slate-300',
+  core: 'border-slate-300',
 };
 
 export const INTENSITY_TEXT_COLORS: Record<Intensity, string> = {
-  endurance: 'text-blue-700',
-  threshold: 'text-emerald-700',
-  intervals: 'text-orange-700',
+  endurance: 'text-green-700',
+  threshold: 'text-orange-700',
+  intervals: 'text-red-700',
   recovery: 'text-slate-700',
   technique: 'text-blue-700',
-  upper_body: 'text-rose-700',
-  lower_body: 'text-amber-700',
-  core: 'text-purple-700',
+  upper_body: 'text-slate-700',
+  lower_body: 'text-slate-700',
+  core: 'text-slate-700',
 };
 
 export const DISCIPLINE_LABELS = {

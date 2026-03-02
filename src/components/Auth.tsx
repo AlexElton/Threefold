@@ -35,14 +35,14 @@ export function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <div className="flex items-center justify-center mb-8">
-            <img src={logoWithText} alt="Threefold" className="h-24 w-auto" />
+        <div className="bg-white border border-slate-200 shadow-sm p-7">
+          <div className="flex items-center justify-center mb-6 border-b border-slate-200 pb-4">
+            <img src={logoWithText} alt="Threefold" className="h-20 w-auto" />
           </div>
-          <p className="text-center text-slate-600 mb-8">
-            Volume-based triathlon training
+          <p className="text-center text-slate-600 text-sm mb-6">
+            Training planning and load control
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -56,7 +56,7 @@ export function Auth() {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition"
+                  className="w-full px-3 py-2 border border-slate-300 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 outline-none"
                   placeholder="John Doe"
                   required={!isLogin}
                 />
@@ -72,7 +72,7 @@ export function Auth() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition"
+                  className="w-full px-3 py-2 border border-slate-300 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 outline-none"
                 placeholder="you@example.com"
                 required
               />
@@ -87,7 +87,7 @@ export function Auth() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition"
+                  className="w-full px-3 py-2 border border-slate-300 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 outline-none"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -95,7 +95,7 @@ export function Auth() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 text-sm">
                 {error}
               </div>
             )}
@@ -103,7 +103,7 @@ export function Auth() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-700 hover:bg-blue-800 text-white font-medium py-2.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Sign Up')}
             </button>
@@ -115,7 +115,7 @@ export function Auth() {
                 setIsLogin(!isLogin);
                 setError('');
               }}
-              className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+              className="text-blue-700 hover:text-blue-800 text-sm font-medium"
             >
               {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>
