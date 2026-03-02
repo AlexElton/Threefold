@@ -59,7 +59,7 @@ export function WorkoutDetailModal({
                 Effort
               </div>
               <div className="text-lg font-bold text-slate-900">
-                {INTENSITY_LABELS[workout.intensity as any]}
+                {INTENSITY_LABELS[workout.intensity]}
               </div>
             </div>
             <div>

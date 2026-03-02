@@ -277,7 +277,6 @@ function ProgressionAnalytics({ workouts }: { workouts: Workout[] }) {
   return (
     <div className="px-0 sm:px-2">
       <h2 className="text-xl sm:text-3xl font-bold text-slate-900 mb-3 sm:mb-4">Training Progression</h2>
-      <p className="text-slate-600 mb-3 sm:mb-4 text-base sm:text-lg">3-month weekly volume analysis by discipline</p>
       <AnalyticsChart workouts={workouts} />
     </div>
   );
@@ -293,6 +292,18 @@ function AnalyticsChart({ workouts }: { workouts: Workout[] }) {
     const hours = Math.floor(totalMinutes / 60);
     const remainingMinutes = totalMinutes % 60;
     return `${hours}h ${remainingMinutes}m`;
+  };
+
+  const formatAxisDuration = (minutes: number) => {
+    const totalMinutes = Math.max(0, Math.round(minutes));
+    const hours = Math.floor(totalMinutes / 60);
+    const remainingMinutes = totalMinutes % 60;
+
+    if (remainingMinutes === 0) {
+      return `${hours}h`;
+    }
+
+    return `${hours}h ${remainingMinutes}min`;
   };
 
   const getWeeklyData = () => {
@@ -357,11 +368,11 @@ function AnalyticsChart({ workouts }: { workouts: Workout[] }) {
   });
 
   const maxVolume = Math.max(...series, 1);
-  const roundedTopHours = Math.max(1, Math.round(maxVolume / 60));
+  const roundedTopHours = Math.max(1, Math.floor(maxVolume / 60) + 1);
   const yAxisMaxMinutes = roundedTopHours * 60;
   const chartWidth = 960;
   const chartHeight = 320;
-  const paddingX = 44;
+  const paddingX = 88;
   const paddingTop = 24;
   const paddingBottom = 56;
   const plotWidth = chartWidth - paddingX * 2;
@@ -375,17 +386,16 @@ function AnalyticsChart({ workouts }: { workouts: Workout[] }) {
 
   const monthLabelIndices = (() => {
     const labels: number[] = [];
-    const seen = new Set<string>();
 
-    for (let index = weeks.length - 1; index >= 0; index--) {
-      const month = weeks[index].monthLabel;
-      if (seen.has(month)) continue;
-      seen.add(month);
-      labels.push(index);
-      if (labels.length === 3) break;
+    for (let index = 0; index < weeks.length; index++) {
+      const isFirstWeek = index === 0;
+      const monthChanged = weeks[index].monthLabel !== weeks[index - 1]?.monthLabel;
+      if (isFirstWeek || monthChanged) {
+        labels.push(index);
+      }
     }
 
-    return labels.sort((a, b) => a - b);
+    return labels;
   })();
 
   const pathData = points
@@ -411,14 +421,14 @@ function AnalyticsChart({ workouts }: { workouts: Workout[] }) {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 md:grid-cols-[320px_minmax(0,1fr)] gap-3 md:gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-[clamp(180px,24vw,300px)_minmax(0,1fr)] gap-3 md:gap-6 items-start">
         <div className="px-1 md:pt-2">
           <div className="flex md:flex-col gap-2 mb-4 overflow-x-auto md:overflow-visible pb-1 md:pb-0">
             {sportOptions.map(option => (
               <button
                 key={option.key}
                 onClick={() => setSelectedSport(option.key)}
-                className={`px-3 py-2 rounded-lg text-base font-medium border transition shrink-0 md:w-full md:text-left ${
+                className={`px-2.5 sm:px-3.5 lg:px-4 py-2 sm:py-2.5 rounded-lg text-sm sm:text-base lg:text-lg font-medium border transition shrink-0 md:w-full md:text-left ${
                   selectedSport === option.key
                     ? 'bg-slate-900 text-white border-slate-900'
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
@@ -430,24 +440,23 @@ function AnalyticsChart({ workouts }: { workouts: Workout[] }) {
           </div>
         </div>
 
-        <div className="px-0 sm:px-1">
+        <div className="px-0 sm:px-1 min-w-0">
           {selectedWeek && selectedPoint && (
-            <div className="mb-3 px-1">
+            <div className="mb-2 sm:mb-3 px-1">
               <div className="text-base font-semibold text-slate-900">Week of {selectedWeek.weekRange}</div>
               <div className="text-xl font-bold text-slate-900">{formatDuration(selectedPoint.value)}</div>
             </div>
           )}
 
-          <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-56 sm:h-72" role="img" aria-label={`${selectedConfig.label} weekly line chart`}>
+          <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-[clamp(260px,38vw,420px)]" role="img" aria-label={`${selectedConfig.label} weekly line chart`}>
           {[1, 0.5, 0].map((ratio, index) => {
             const y = paddingTop + (1 - ratio) * plotHeight;
             const value = yAxisMaxMinutes * ratio;
-            const hours = value / 60;
             return (
               <g key={index}>
                 <line x1={paddingX} y1={y} x2={chartWidth - paddingX} y2={y} className="stroke-slate-200" strokeWidth="1" />
-                <text x={paddingX - 8} y={y + 4} textAnchor="end" className="fill-slate-500 text-lg font-medium">
-                  {`${hours % 1 === 0 ? hours.toFixed(0) : hours.toFixed(1)}h`}
+                <text x={10} y={y + 4} textAnchor="start" className="fill-slate-500 text-sm sm:text-base font-medium">
+                  {formatAxisDuration(value)}
                 </text>
               </g>
             );
@@ -480,10 +489,6 @@ function AnalyticsChart({ workouts }: { workouts: Workout[] }) {
             ))}
           </g>
           </svg>
-
-          <div className="mt-1 text-base text-slate-700 font-medium px-1">
-            {selectedConfig.label} weekly volume (hours)
-          </div>
         </div>
       </div>
     </div>
