@@ -30,21 +30,25 @@ export function WorkoutCreatorPanel({
   const { user } = useAuth();
 
   const [discipline, setDiscipline] = useState<Discipline>('bike');
-  const [duration, setDuration] = useState(60);
+  const [durationInput, setDurationInput] = useState('60');
   const [intensity, setIntensity] = useState<Intensity>('endurance');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (existingWorkout) {
       setDiscipline(existingWorkout.discipline);
-      setDuration(existingWorkout.duration_minutes);
+      setDurationInput(String(existingWorkout.duration_minutes));
       setIntensity(existingWorkout.intensity as Intensity);
     } else {
       setDiscipline('bike');
-      setDuration(60);
+      setDurationInput('60');
       setIntensity('endurance');
     }
   }, [existingWorkout, isOpen]);
+
+  const parsedDuration = Number.parseInt(durationInput, 10);
+  const duration = Number.isNaN(parsedDuration) ? 0 : parsedDuration;
+  const isDurationValid = duration > 0;
 
   const getIntensityOptions = () => {
     return DISCIPLINE_INTENSITY_MAP[discipline].map(value => ({
@@ -69,6 +73,7 @@ export function WorkoutCreatorPanel({
 
   const handleSave = async () => {
     if (!user) return;
+    if (duration <= 0) return;
 
     setLoading(true);
 
@@ -166,10 +171,11 @@ export function WorkoutCreatorPanel({
               Duration (minutes)
             </label>
             <input
-              type="number"
-              value={duration}
-              min={5}
-              onChange={(e) => setDuration(Number(e.target.value))}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={durationInput}
+              onChange={(e) => setDurationInput(e.target.value.replace(/\D/g, ''))}
               className="w-full border border-slate-300 rounded-lg p-2 sm:p-3 text-sm"
             />
           </div>
@@ -197,10 +203,10 @@ export function WorkoutCreatorPanel({
 
           <button
             onClick={handleSave}
-            disabled={loading}
+            disabled={loading || !isDurationValid}
             className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 sm:py-3 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
-            {loading ? 'Saving...' : 'Save Workout'}
+            {loading ? 'Saving...' : isDurationValid ? 'Save Workout' : 'Enter Duration'}
           </button>
         </div>
       </div>

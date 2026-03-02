@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Dumbbell } from 'lucide-react';
+import logoWithText from '../img/logo(text).png';
 
 export function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -27,8 +27,8 @@ export function Auth() {
         const { error } = await signUp(email, password, fullName);
         if (error) throw error;
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -39,14 +39,8 @@ export function Auth() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="flex items-center justify-center mb-8">
-            <div className="bg-emerald-500 p-3 rounded-xl">
-              <Dumbbell className="w-8 h-8 text-white" />
-            </div>
+            <img src={logoWithText} alt="Threefold" className="h-24 w-auto" />
           </div>
-
-          <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">
-            Threefold
-          </h1>
           <p className="text-center text-slate-600 mb-8">
             Volume-based triathlon training
           </p>
