@@ -99,20 +99,20 @@ export function Calendar({
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6">
+    <div className="bg-white border border-slate-200 shadow-sm p-3 sm:p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{monthName}</h2>
+      <div className="flex items-center justify-between mb-3 sm:mb-4 border-b border-slate-200 pb-2">
+        <h2 className="text-lg sm:text-xl font-semibold text-slate-900">{monthName}</h2>
         <div className="flex gap-2">
           <button
             onClick={handlePrevMonth}
-            className="p-2 hover:bg-slate-100 rounded-lg transition"
+            className="p-1.5 border border-slate-300 hover:border-slate-400 transition"
           >
             <ChevronLeft className="w-5 h-5 text-slate-700" />
           </button>
           <button
             onClick={handleNextMonth}
-            className="p-2 hover:bg-slate-100 rounded-lg transition"
+            className="p-1.5 border border-slate-300 hover:border-slate-400 transition"
           >
             <ChevronRight className="w-5 h-5 text-slate-700" />
           </button>
@@ -120,9 +120,9 @@ export function Calendar({
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-7 gap-1 sm:gap-2">
+      <div className="grid grid-cols-7 gap-1">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-          <div key={day} className="text-center font-semibold text-slate-600 text-xs sm:text-sm py-1.5 sm:py-2">
+          <div key={day} className="text-center font-semibold text-slate-600 text-xs sm:text-sm py-1.5 border-b border-slate-200">
             {day}
           </div>
         ))}
@@ -134,11 +134,11 @@ export function Calendar({
           return (
             <div
               key={day.toISOString() + index}
-              className={`min-h-[100px] sm:min-h-[120px] border rounded-lg p-1.5 sm:p-2 transition ${
+              className={`min-h-[100px] sm:min-h-[118px] border p-1.5 sm:p-2 transition ${
                 isCurrentMonth(day) ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-100'
-              } ${isToday(day) ? 'ring-2 ring-emerald-500' : ''} ${
+              } ${isToday(day) ? 'ring-1 ring-blue-700 ring-inset' : ''} ${
                 dropIndicator?.date === dateStr && !dropIndicator.workoutId
-                  ? 'ring-1 ring-emerald-300 ring-inset'
+                  ? 'ring-1 ring-blue-300 ring-inset'
                   : ''
               }`}
               onDragOver={(e) => {
@@ -160,13 +160,13 @@ export function Calendar({
                 <span
                   className={`text-xs sm:text-sm font-medium ${
                     isCurrentMonth(day) ? 'text-slate-700' : 'text-slate-400'
-                  } ${isToday(day) ? 'text-emerald-600 font-bold' : ''}`}
+                  } ${isToday(day) ? 'text-blue-700 font-semibold' : ''}`}
                 >
                   {day.getDate()}
                 </span>
                 <button
                   onClick={() => onDayClick(dateStr)}
-                  className="opacity-0 hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-100 rounded"
+                  className="opacity-0 hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-100"
                 >
                   <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
                 </button>
@@ -189,7 +189,7 @@ export function Calendar({
                     }}
                   >
                     {dropIndicator?.date === dateStr && dropIndicator.workoutId === workout.id && (
-                      <div className="absolute -top-0.5 left-1 right-1 h-0.5 bg-emerald-300 rounded-full opacity-80" />
+                      <div className="absolute -top-0.5 left-1 right-1 h-0.5 bg-blue-300 opacity-80" />
                     )}
                     <WorkoutCard
                       workout={workout}
