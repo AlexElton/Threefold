@@ -29,16 +29,34 @@ export function WorkoutDetailModal({
   if (!isOpen || !workout) return null;
 
   const Icon = DISCIPLINE_ICONS[workout.discipline];
-  const colorClass = INTENSITY_COLORS[workout.intensity];
+  const colorClass = (() => {
+    if (workout.discipline === 'strength') {
+      return 'bg-slate-200 text-slate-700 border border-slate-300';
+    }
+
+    if (workout.discipline === 'swim') {
+      return 'bg-blue-600 text-white';
+    }
+
+    if (workout.intensity === 'recovery') {
+      return 'bg-slate-500 text-white';
+    }
+
+    if (workout.intensity === 'endurance') {
+      return 'bg-green-600 text-white';
+    }
+
+    return `${INTENSITY_COLORS[workout.intensity]} text-white`;
+  })();
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+    <div className="fixed inset-0 bg-slate-900/30 flex items-center justify-center z-50 p-4">
+      <div className="bg-white border border-slate-300 shadow-sm w-full max-w-sm">
         <div className="p-4 sm:p-6 border-b border-slate-200 flex items-start justify-between">
-          <div className={`${colorClass} text-white p-3 rounded-lg`}>
+          <div className={`${colorClass} p-3`}>
             <Icon className="w-6 h-6" />
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg">
+          <button onClick={onClose} className="p-1 border border-slate-300 hover:border-slate-400">
             <X className="w-5 h-5 text-slate-600" />
           </button>
         </div>
@@ -105,7 +123,7 @@ export function WorkoutDetailModal({
                 onEdit(workout);
                 onClose();
               }}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-medium transition text-sm"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-medium transition text-sm"
             >
               <Pencil className="w-4 h-4" />
               Edit
@@ -116,7 +134,7 @@ export function WorkoutDetailModal({
                 onClose();
               }}
               disabled={isDeleting}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-medium transition disabled:opacity-50 text-sm"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 font-medium transition disabled:opacity-50 text-sm"
             >
               <Trash2 className="w-4 h-4" />
               Delete
