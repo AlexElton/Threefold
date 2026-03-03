@@ -166,7 +166,7 @@ export function Calendar({
                 </span>
                 <button
                   onClick={() => onDayClick(dateStr)}
-                  className="opacity-0 hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-100"
+                  className="opacity-30 hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-100"
                 >
                   <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
                 </button>

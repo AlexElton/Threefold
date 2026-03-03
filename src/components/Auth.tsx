@@ -1,9 +1,15 @@
 import { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import logoWithText from '../img/logo(text).png';
 
-export function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+interface Props {
+  onBack?: () => void;
+  initialMode?: 'login' | 'signup';
+}
+
+export function Auth({ onBack, initialMode = 'login' }: Props) {
+  const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -36,6 +42,15 @@ export function Auth() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="absolute top-5 left-5 flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+      )}
       <div className="max-w-md w-full">
         <div className="bg-white border border-slate-200 shadow-sm p-7">
           <div className="flex items-center justify-center mb-6 border-b border-slate-200 pb-4">
