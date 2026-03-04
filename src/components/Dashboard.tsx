@@ -160,13 +160,13 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
-          <img src={logo} alt="Threefold" className="h-20 w-auto" />
+      <header className="border-b border-slate-100 bg-white sticky top-0 z-10 shadow-sm">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+          <img src={logo} alt="Threefold" className="h-12 w-auto" />
 
           <button
             onClick={() => setIsMobileMenuOpen(v => !v)}
-            className="sm:hidden p-2 border border-slate-300 text-slate-700"
+            className="sm:hidden p-2 text-slate-600 hover:text-slate-900 transition-colors"
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -177,10 +177,10 @@ export function Dashboard() {
               <button
                 key={p}
                 onClick={() => navigate(p)}
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium border transition ${
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
                   page === p
-                    ? 'bg-blue-700 text-white border-blue-700'
-                    : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400'
+                    ? 'bg-blue-700 text-white'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -191,15 +191,15 @@ export function Dashboard() {
         </div>
 
         {isMobileMenuOpen && (
-          <div className="sm:hidden border-t border-slate-200 px-4 py-3 space-y-2">
+          <div className="sm:hidden border-t border-slate-100 px-5 py-3 space-y-1">
             {NAV_ITEMS.map(({ page: p, label, icon: Icon }) => (
               <button
                 key={p}
                 onClick={() => navigate(p)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium border transition ${
+                className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
                   page === p
-                    ? 'bg-blue-700 text-white border-blue-700'
-                    : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400'
+                    ? 'bg-blue-700 text-white'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -210,7 +210,7 @@ export function Dashboard() {
         )}
       </header>
 
-      <main className="max-w-[1500px] mx-auto px-3 sm:px-6 py-4 sm:py-6">
+      <main className="max-w-5xl mx-auto px-5 sm:px-8 py-4 sm:py-6">
         {page === 'dashboard' && <DashboardView workouts={workouts} profileName={profileData?.full_name ?? null} />}
 
         {page === 'calendar' && (
