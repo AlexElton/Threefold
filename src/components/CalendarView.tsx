@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { CalendarDays, BarChart2 } from 'lucide-react';
 import { Workout } from '../types';
 import { Calendar } from './Calendar';
 import { WorkoutCreatorPanel } from './WorkoutCreatorPanel';
@@ -47,6 +49,9 @@ export function CalendarView({
   runVolumeAlert,
   onDismissAlert,
 }: CalendarViewProps) {
+  // Mobile tab: 'calendar' | 'weekly'
+  const [mobileTab, setMobileTab] = useState<'calendar' | 'weekly'>('calendar');
+
   return (
     <>
       {runVolumeAlert && (
@@ -61,8 +66,35 @@ export function CalendarView({
         existingWorkout={editingWorkout}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <section className="lg:col-span-9">
+      {/* ── Mobile tab bar (hidden on lg+) ─────────────── */}
+      <div className="lg:hidden flex border border-slate-200 bg-white mb-3 overflow-hidden">
+        <button
+          onClick={() => setMobileTab('calendar')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition
+            ${mobileTab === 'calendar'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-500 hover:bg-slate-50'
+            }`}
+        >
+          <CalendarDays className="w-4 h-4" />
+          Calendar
+        </button>
+        <button
+          onClick={() => setMobileTab('weekly')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition border-l border-slate-200
+            ${mobileTab === 'weekly'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-500 hover:bg-slate-50'
+            }`}
+        >
+          <BarChart2 className="w-4 h-4" />
+          This Week
+        </button>
+      </div>
+
+      {/* ── Desktop two-column layout ───────────────────── */}
+      <div className="hidden lg:grid grid-cols-12 gap-4">
+        <section className="col-span-9">
           <Calendar
             workouts={workouts}
             currentMonth={currentMonth}
@@ -75,7 +107,7 @@ export function CalendarView({
             onDrop={onDrop}
           />
         </section>
-        <aside className="lg:col-span-3">
+        <aside className="col-span-3">
           <WeeklySidebar
             workouts={workouts}
             weekStart={weekStart}
@@ -83,6 +115,31 @@ export function CalendarView({
             onNextWeek={onNextWeek}
           />
         </aside>
+      </div>
+
+      {/* ── Mobile: show active tab content ─────────────── */}
+      <div className="lg:hidden">
+        {mobileTab === 'calendar' && (
+          <Calendar
+            workouts={workouts}
+            currentMonth={currentMonth}
+            onMonthChange={onMonthChange}
+            onDayClick={onDayClick}
+            onWorkoutClick={onWorkoutClick}
+            draggedWorkout={draggedWorkout}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onDrop={onDrop}
+          />
+        )}
+        {mobileTab === 'weekly' && (
+          <WeeklySidebar
+            workouts={workouts}
+            weekStart={weekStart}
+            onPrevWeek={onPrevWeek}
+            onNextWeek={onNextWeek}
+          />
+        )}
       </div>
     </>
   );
