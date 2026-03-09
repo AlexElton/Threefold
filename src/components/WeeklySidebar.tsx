@@ -34,10 +34,30 @@ export function WeeklySidebar({
 
   const weekWorkouts = getWeekWorkouts();
 
-  // Calculations
-  const totalDuration = weekWorkouts.reduce((sum, w) => sum + w.duration_minutes, 0);
-  const totalDistance = weekWorkouts.reduce((sum, w) => sum + (w.distance_km || 0), 0);
-  const totalTSS = weekWorkouts.reduce((sum, w) => sum + w.tss, 0);
+  // Deduplicate: for the same date+discipline, prefer the completed workout over planned.
+  // This guards against any residual double-counting in case both rows exist.
+  const deduplicatedWorkouts = (() => {
+    const map = new Map<string, typeof weekWorkouts[number]>();
+    for (const w of weekWorkouts) {
+      const key = `${w.date}|${w.discipline}`;
+      const existing = map.get(key);
+      if (!existing || w.completed) {
+        map.set(key, w);
+      }
+    }
+    return Array.from(map.values());
+  })();
+
+  // Calculations — for completed workouts use actual values, otherwise planned values
+  const totalDuration = deduplicatedWorkouts.reduce(
+    (sum, w) => sum + (w.completed ? (w.actual_duration_minutes ?? w.duration_minutes) : w.duration_minutes),
+    0,
+  );
+  const totalDistance = deduplicatedWorkouts.reduce((sum, w) => sum + (w.distance_km || 0), 0);
+  const totalTSS = deduplicatedWorkouts.reduce(
+    (sum, w) => sum + (w.completed ? (w.actual_tss ?? w.tss) : w.tss),
+    0,
+  );
   
   // Triathlon Target Logic (Example target of 500)
   const plannedTSS = 500;
@@ -53,7 +73,7 @@ export function WeeklySidebar({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const disciplineCounts = weekWorkouts.reduce((acc, w) => {
+  const disciplineCounts = deduplicatedWorkouts.reduce((acc, w) => {
     acc[w.discipline] = (acc[w.discipline] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);

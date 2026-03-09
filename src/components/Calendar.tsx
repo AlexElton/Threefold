@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, X, Bike, Droplets, Footprints, Dumbbell } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, Bike, Droplets, Footprints, Dumbbell, CheckCircle2 } from 'lucide-react';
 import { Workout, Discipline } from '../types';
 import { WorkoutCard } from './WorkoutCard';
 
@@ -29,11 +29,19 @@ const DISCIPLINE_DOT_COLORS: Record<Discipline, string> = {
   strength: 'bg-slate-500',
 };
 
-const DISCIPLINE_CARD_COLORS: Record<Discipline, string> = {
-  swim:     'bg-blue-600 text-white',
-  bike:     'bg-yellow-500 text-slate-900',
-  run:      'bg-green-600 text-white',
-  strength: 'bg-slate-300 text-slate-800',
+// Completed badge colors for the mobile detail panel
+const COMPLETED_BADGE: Record<Discipline, string> = {
+  swim:     'bg-blue-50 border-l-4 border-l-blue-500 border border-blue-100',
+  bike:     'bg-yellow-50 border-l-4 border-l-yellow-500 border border-yellow-100',
+  run:      'bg-green-50 border-l-4 border-l-green-600 border border-green-100',
+  strength: 'bg-slate-100 border-l-4 border-l-slate-500 border border-slate-200',
+};
+
+const COMPLETED_ICON_COLOR: Record<Discipline, string> = {
+  swim:     'text-blue-600',
+  bike:     'text-yellow-700',
+  run:      'text-green-700',
+  strength: 'text-slate-600',
 };
 
 export function Calendar({
@@ -347,30 +355,48 @@ export function Calendar({
               <div className="divide-y divide-slate-100">
                 {selectedMobileDayWorkouts.map((workout) => {
                   const Icon = DISCIPLINE_ICONS[workout.discipline];
-                  const cardColor = DISCIPLINE_CARD_COLORS[workout.discipline];
+                  const isCompleted = workout.completed;
+                  const displayName = workout.strava_name ?? workout.discipline;
+                  const displayDuration = workout.actual_duration_minutes ?? workout.duration_minutes;
                   return (
                     <button
                       key={workout.id}
                       onClick={() => onWorkoutClick(workout)}
                       className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition"
                     >
-                      {/* Colored discipline badge */}
-                      <div className={`${cardColor} w-9 h-9 flex items-center justify-center flex-shrink-0`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
+                      {/* Discipline icon badge */}
+                      {isCompleted ? (
+                        <div className={`${COMPLETED_BADGE[workout.discipline]} w-9 h-9 flex items-center justify-center flex-shrink-0`}>
+                          <Icon className={`w-4 h-4 ${COMPLETED_ICON_COLOR[workout.discipline]}`} />
+                        </div>
+                      ) : (
+                        <div className="border border-dashed border-slate-300 bg-white w-9 h-9 flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-4 h-4 text-slate-400" />
+                        </div>
+                      )}
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 capitalize">{workout.discipline}</p>
-                        <p className="text-xs text-slate-500 capitalize">{workout.intensity.replace('_', ' ')}</p>
+                        <p className="text-sm font-semibold text-slate-800 capitalize truncate">
+                          {isCompleted ? displayName : workout.discipline}
+                        </p>
+                        <p className="text-xs text-slate-500 capitalize">
+                          {workout.intensity.replace('_', ' ')}
+                        </p>
                       </div>
                       {/* Stats */}
                       <div className="flex flex-col items-end gap-0.5">
-                        <span className="text-sm font-bold text-slate-800">{workout.duration_minutes} min</span>
-                        <span className="text-xs text-slate-400">{workout.tss} TSS</span>
+                        <span className="text-sm font-bold text-slate-800">{displayDuration} min</span>
+                        {isCompleted && workout.strava_avg_hr != null ? (
+                          <span className="text-xs text-slate-400">{Math.round(workout.strava_avg_hr)} bpm</span>
+                        ) : (
+                          <span className="text-xs text-slate-400">{workout.tss} TSS</span>
+                        )}
                       </div>
-                      {/* Completed indicator */}
-                      {workout.completed && (
-                        <span className="text-xs font-bold text-green-600 ml-1">✓</span>
+                      {/* Status indicator */}
+                      {isCompleted ? (
+                        <CheckCircle2 className={`w-4 h-4 ml-1 flex-shrink-0 ${COMPLETED_ICON_COLOR[workout.discipline]}`} />
+                      ) : (
+                        <span className="w-4 h-4 ml-1 flex-shrink-0 rounded-full border-2 border-slate-300" />
                       )}
                     </button>
                   );

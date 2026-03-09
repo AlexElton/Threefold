@@ -1,5 +1,5 @@
-import { X, Pencil, Trash2 } from 'lucide-react';
-import { Workout, INTENSITY_LABELS, DISCIPLINE_LABELS, INTENSITY_COLORS } from '../types';
+import { X, Pencil, Trash2, CheckCircle2, Calendar } from 'lucide-react';
+import { Workout, INTENSITY_LABELS, DISCIPLINE_LABELS } from '../types';
 import { Bike, Droplets, Footprints, Dumbbell } from 'lucide-react';
 
 interface WorkoutDetailModalProps {
@@ -18,6 +18,29 @@ const DISCIPLINE_ICONS = {
   strength: Dumbbell,
 };
 
+const DISCIPLINE_HEADER: Record<string, string> = {
+  swim:     'bg-blue-600 text-white',
+  bike:     'bg-yellow-500 text-slate-900',
+  run:      'bg-green-600 text-white',
+  strength: 'bg-slate-500 text-white',
+};
+
+const DISCIPLINE_BORDER_TOP: Record<string, string> = {
+  swim:     'border-t-4 border-blue-600',
+  bike:     'border-t-4 border-yellow-500',
+  run:      'border-t-4 border-green-600',
+  strength: 'border-t-4 border-slate-500',
+};
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-slate-50 border border-slate-200 p-2 flex flex-col gap-0.5">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+      <span className="text-sm font-bold text-slate-900">{value}</span>
+    </div>
+  );
+}
+
 export function WorkoutDetailModal({
   isOpen,
   workout,
@@ -29,95 +52,112 @@ export function WorkoutDetailModal({
   if (!isOpen || !workout) return null;
 
   const Icon = DISCIPLINE_ICONS[workout.discipline];
-  const colorClass = (() => {
-    if (workout.discipline === 'strength') {
-      return 'bg-slate-200 text-slate-700 border border-slate-300';
-    }
+  const headerColor = DISCIPLINE_HEADER[workout.discipline] ?? 'bg-slate-500 text-white';
+  const borderTop = DISCIPLINE_BORDER_TOP[workout.discipline] ?? 'border-t-4 border-slate-500';
+  const hasStrava = !!workout.strava_activity_id;
 
-    if (workout.discipline === 'swim') {
-      return 'bg-blue-600 text-white';
-    }
-
-    if (workout.intensity === 'recovery') {
-      return 'bg-slate-500 text-white';
-    }
-
-    if (workout.intensity === 'endurance') {
-      return 'bg-green-600 text-white';
-    }
-
-    return `${INTENSITY_COLORS[workout.intensity]} text-white`;
-  })();
+  const formatSpeed = (ms: number) => `${(ms * 3.6).toFixed(1)} km/h`;
+  const formatPace = (ms: number) => {
+    const secsPerKm = 1000 / ms;
+    const mins = Math.floor(secsPerKm / 60);
+    const secs = Math.round(secsPerKm % 60);
+    return `${mins}:${String(secs).padStart(2, '0')} /km`;
+  };
 
   return (
     <div className="fixed inset-0 bg-slate-900/30 flex items-center justify-center z-50 p-4">
-      <div className="bg-white border border-slate-300 shadow-sm w-full max-w-sm">
-        <div className="p-4 sm:p-6 border-b border-slate-200 flex items-start justify-between">
-          <div className={`${colorClass} p-3`}>
-            <Icon className="w-6 h-6" />
+      <div className={`bg-white ${borderTop} shadow-sm w-full max-w-sm`}>
+        {/* Colored header */}
+        <div className={`${headerColor} px-4 py-3 flex items-center justify-between`}>
+          <div className="flex items-center gap-2">
+            <Icon className="w-5 h-5" />
+            <span className="font-bold text-base">{DISCIPLINE_LABELS[workout.discipline]}</span>
+            {hasStrava && (
+              <span className="text-[11px] font-semibold opacity-80 bg-white/20 px-1.5 py-0.5">
+                via Strava
+              </span>
+            )}
           </div>
-          <button onClick={onClose} className="p-1 border border-slate-300 hover:border-slate-400">
-            <X className="w-5 h-5 text-slate-600" />
+          <button onClick={onClose} className="p-1 bg-white/20 hover:bg-white/30 transition">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-4">
-          <div>
-            <div className="text-xs uppercase tracking-wider font-semibold text-slate-500 mb-1">
-              Workout Type
-            </div>
-            <div className="text-xl font-bold text-slate-900">
-              {DISCIPLINE_LABELS[workout.discipline]}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <div className="p-4 space-y-4">
+          {/* ── Strava Activity Section ─────────────────────────────────── */}
+          {hasStrava && (
             <div>
-              <div className="text-xs uppercase tracking-wider font-semibold text-slate-500 mb-1">
-                Effort
+              <div className="flex items-center gap-1.5 mb-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Activity (via Strava)
+                </span>
               </div>
-              <div className="text-lg font-bold text-slate-900">
-                {INTENSITY_LABELS[workout.intensity]}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wider font-semibold text-slate-500 mb-1">
-                Duration
-              </div>
-              <div className="text-lg font-bold text-slate-900">
-                {workout.duration_minutes} min
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="text-xs uppercase tracking-wider font-semibold text-slate-500 mb-1">
-              Training Stress
-            </div>
-            <div className="text-lg font-bold text-slate-900">{workout.tss} TSS</div>
-          </div>
-
-          {workout.distance_km && (
-            <div>
-              <div className="text-xs uppercase tracking-wider font-semibold text-slate-500 mb-1">
-                Distance
-              </div>
-              <div className="text-lg font-bold text-slate-900">
-                {workout.distance_km.toFixed(1)} km
+              {workout.strava_name && (
+                <p className="text-sm font-semibold text-slate-800 mb-2">{workout.strava_name}</p>
+              )}
+              <div className="grid grid-cols-2 gap-1.5">
+                {workout.actual_duration_minutes != null && (
+                  <StatTile label="Duration" value={`${workout.actual_duration_minutes} min`} />
+                )}
+                {workout.actual_tss != null && (
+                  <StatTile label="TSS" value={`${workout.actual_tss}`} />
+                )}
+                {workout.strava_avg_hr != null && (
+                  <StatTile label="Avg HR" value={`${Math.round(workout.strava_avg_hr)} bpm`} />
+                )}
+                {workout.strava_max_hr != null && (
+                  <StatTile label="Max HR" value={`${Math.round(workout.strava_max_hr)} bpm`} />
+                )}
+                {workout.strava_avg_watts != null && (
+                  <StatTile label="Avg Power" value={`${Math.round(workout.strava_avg_watts)} W`} />
+                )}
+                {workout.strava_elev_gain != null && (
+                  <StatTile label="Elevation" value={`${Math.round(workout.strava_elev_gain)} m`} />
+                )}
+                {workout.strava_avg_speed_ms != null && workout.discipline !== 'run' && (
+                  <StatTile label="Avg Speed" value={formatSpeed(workout.strava_avg_speed_ms)} />
+                )}
+                {workout.strava_avg_speed_ms != null && workout.discipline === 'run' && (
+                  <StatTile label="Pace" value={formatPace(workout.strava_avg_speed_ms)} />
+                )}
+                {workout.distance_km != null && (
+                  <StatTile label="Distance" value={`${workout.distance_km.toFixed(1)} km`} />
+                )}
               </div>
             </div>
           )}
 
-          {workout.notes && (
-            <div>
-              <div className="text-xs uppercase tracking-wider font-semibold text-slate-500 mb-1">
-                Notes
+          {/* ── Plan Section ────────────────────────────────────────────── */}
+          <div>
+            {hasStrava && (
+              <div className="flex items-center gap-1.5 mb-2">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Plan
+                </span>
               </div>
-              <div className="text-slate-700">{workout.notes}</div>
+            )}
+            <div className="grid grid-cols-2 gap-1.5">
+              <StatTile label="Effort" value={INTENSITY_LABELS[workout.intensity]} />
+              <StatTile label="Planned Duration" value={`${workout.duration_minutes} min`} />
+              <StatTile label="Planned TSS" value={`${workout.tss}`} />
+              {!hasStrava && workout.distance_km != null && (
+                <StatTile label="Distance" value={`${workout.distance_km.toFixed(1)} km`} />
+              )}
             </div>
-          )}
+            {workout.notes && (
+              <div className="mt-2">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  Notes
+                </div>
+                <p className="text-sm text-slate-600">{workout.notes}</p>
+              </div>
+            )}
+          </div>
 
-          <div className="flex gap-2 pt-4">
+          {/* ── Actions ─────────────────────────────────────────────────── */}
+          <div className="flex gap-2 pt-2">
             <button
               onClick={() => {
                 onEdit(workout);
@@ -145,3 +185,4 @@ export function WorkoutDetailModal({
     </div>
   );
 }
+

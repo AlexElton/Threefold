@@ -3,6 +3,13 @@ import { LayoutDashboard, CalendarDays, BarChart3, User, Menu, X } from 'lucide-
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Workout } from '../types';
+import {
+  getStravaConnection,
+  syncStravaActivities,
+  disconnectStrava,
+  stravaConnectionNeedsSync,
+} from '../lib/strava';
+import type { StravaConnection } from '../lib/strava';
 import { CalendarView } from './CalendarView';
 import { DashboardView } from './DashboardView';
 import { AnalyticsView } from './AnalyticsView';
@@ -28,6 +35,7 @@ export function Dashboard() {
 
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [stravaConnection, setStravaConnection] = useState<StravaConnection | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
@@ -104,7 +112,7 @@ export function Dashboard() {
     const to = new Date();
     to.setDate(to.getDate() + 90);
 
-    const [workoutsRes, profileRes] = await Promise.all([
+    const [workoutsRes, profileRes, stravaConn] = await Promise.all([
       supabase
         .from('workouts')
         .select('*')
@@ -113,6 +121,7 @@ export function Dashboard() {
         .lte('date', fmtDate(to))
         .order('date'),
       supabase.from('profiles').select('full_name, current_ctl, current_atl, created_at').eq('id', user.id).maybeSingle(),
+      getStravaConnection(user.id),
     ]);
 
     if (!workoutsRes.error && workoutsRes.data) {
@@ -120,10 +129,54 @@ export function Dashboard() {
       checkRunVolumeIncrease(workoutsRes.data);
     }
     if (profileRes.data) setProfileData(profileRes.data as ProfileData);
+    setStravaConnection(stravaConn);
     setLoading(false);
+
+    // Sync Strava activities if connected and due for a check
+    if (stravaConn && stravaConnectionNeedsSync(stravaConn)) {
+      try {
+        const imported = await syncStravaActivities(user.id, stravaConn);
+        if (imported > 0) {
+          // Reload workouts to include newly imported activities
+          const refreshed = await supabase
+            .from('workouts')
+            .select('*')
+            .eq('user_id', user.id)
+            .gte('date', fmtDate(from))
+            .lte('date', fmtDate(to))
+            .order('date');
+          if (!refreshed.error && refreshed.data) {
+            setWorkouts(refreshed.data);
+            checkRunVolumeIncrease(refreshed.data);
+          }
+          // Update cached connection with new last_synced_at
+          setStravaConnection(prev => prev ? { ...prev, last_synced_at: new Date().toISOString() } : prev);
+        }
+      } catch {
+        // Strava sync failures are non-fatal; the user can retry manually
+      }
+    }
   }, [user, checkRunVolumeIncrease]);
 
 
+
+  const handleStravaSync = useCallback(async (): Promise<number> => {
+    if (!user || !stravaConnection) return 0;
+    const count = await syncStravaActivities(user.id, stravaConnection, true);
+    if (count > 0) {
+      await loadWorkouts();
+    } else {
+      // Still update last_synced_at in state
+      setStravaConnection(prev => prev ? { ...prev, last_synced_at: new Date().toISOString() } : prev);
+    }
+    return count;
+  }, [user, stravaConnection, loadWorkouts]);
+
+  const handleStravaDisconnect = useCallback(async () => {
+    if (!user) return;
+    await disconnectStrava(user.id);
+    setStravaConnection(null);
+  }, [user]);
 
   const handleDeleteWorkout = async (workout: Workout) => {
     setIsDeleting(true);
@@ -248,6 +301,9 @@ export function Dashboard() {
           <ProfileView
             profileData={profileData}
             onProfileUpdate={(name) => setProfileData(p => p ? { ...p, full_name: name } : p)}
+            stravaConnection={stravaConnection}
+            onStravaDisconnect={handleStravaDisconnect}
+            onStravaSync={handleStravaSync}
           />
         )}
       </main>
