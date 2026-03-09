@@ -18,6 +18,7 @@ export interface Workout {
   actual_duration_minutes: number | null;
   actual_tss: number | null;
   notes: string;
+  strava_activity_id: number | null;
   created_at: string;
   updated_at: string;
 }

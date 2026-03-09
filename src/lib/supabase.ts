@@ -55,6 +55,13 @@ export type Database = {
           actual_duration_minutes: number | null;
           actual_tss: number | null;
           notes: string;
+          strava_activity_id: number | null;
+          strava_name: string | null;
+          strava_avg_hr: number | null;
+          strava_max_hr: number | null;
+          strava_avg_watts: number | null;
+          strava_elev_gain: number | null;
+          strava_avg_speed_ms: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -71,6 +78,13 @@ export type Database = {
           actual_duration_minutes?: number | null;
           actual_tss?: number | null;
           notes?: string;
+          strava_activity_id?: number | null;
+          strava_name?: string | null;
+          strava_avg_hr?: number | null;
+          strava_max_hr?: number | null;
+          strava_avg_watts?: number | null;
+          strava_elev_gain?: number | null;
+          strava_avg_speed_ms?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -87,6 +101,13 @@ export type Database = {
           actual_duration_minutes?: number | null;
           actual_tss?: number | null;
           notes?: string;
+          strava_activity_id?: number | null;
+          strava_name?: string | null;
+          strava_avg_hr?: number | null;
+          strava_max_hr?: number | null;
+          strava_avg_watts?: number | null;
+          strava_elev_gain?: number | null;
+          strava_avg_speed_ms?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -159,6 +180,44 @@ export type Database = {
           atl?: number;
           tsb?: number;
           created_at?: string;
+        };
+      };
+      strava_connections: {
+        Row: {
+          id: string;
+          user_id: string;
+          athlete_id: number;
+          athlete_name: string | null;
+          access_token: string;
+          refresh_token: string;
+          expires_at: number;
+          last_synced_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          athlete_id: number;
+          athlete_name?: string | null;
+          access_token: string;
+          refresh_token: string;
+          expires_at: number;
+          last_synced_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          athlete_id?: number;
+          athlete_name?: string | null;
+          access_token?: string;
+          refresh_token?: string;
+          expires_at?: number;
+          last_synced_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };
