@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Calendar, LogOut, Save, Edit2, X } from 'lucide-react';
+import { User, Mail, Calendar, LogOut, Save, Edit2, X, Activity, CheckCircle, RefreshCw, Unlink } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { getStravaAuthUrl } from '../lib/strava';
+import type { StravaConnection } from '../lib/strava';
 
 interface ProfileData {
   full_name: string | null;
@@ -20,9 +22,12 @@ interface LifetimeStats {
 interface ProfileViewProps {
   profileData: ProfileData | null;
   onProfileUpdate: (name: string | null) => void;
+  stravaConnection: StravaConnection | null;
+  onStravaDisconnect: () => void;
+  onStravaSync: () => Promise<number>;
 }
 
-export function ProfileView({ profileData, onProfileUpdate }: ProfileViewProps) {
+export function ProfileView({ profileData, onProfileUpdate, stravaConnection, onStravaDisconnect, onStravaSync }: ProfileViewProps) {
   const { user, signOut } = useAuth();
   const [stats, setStats] = useState<LifetimeStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -30,6 +35,10 @@ export function ProfileView({ profileData, onProfileUpdate }: ProfileViewProps) 
   const [nameInput, setNameInput] = useState(profileData?.full_name ?? '');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [stravaSyncing, setStravaSyncing] = useState(false);
+  const [stravaSyncResult, setStravaSyncResult] = useState<number | null>(null);
+  const [stravaError, setStravasError] = useState('');
+  const [stravaDisconnecting, setStravaDisconnecting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -208,7 +217,100 @@ export function ProfileView({ profileData, onProfileUpdate }: ProfileViewProps) 
         </div>
       )}
 
-      {/* Account actions */}
+      {/* ── Strava Integration ───────────────────────── */}
+      <div className="bg-white border border-slate-200 p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <Activity className="w-4 h-4 text-slate-400" />
+          Strava
+        </h2>
+
+        {stravaConnection ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2 p-3 bg-orange-50 border border-orange-200">
+              <CheckCircle className="w-4 h-4 text-orange-500 shrink-0" />
+              <div className="text-sm flex-1 min-w-0">
+                <span className="font-medium text-slate-900">Connected</span>
+                {stravaConnection.athlete_name && (
+                  <span className="text-slate-500"> as {stravaConnection.athlete_name}</span>
+                )}
+              </div>
+              {stravaConnection.last_synced_at && (
+                <span className="text-xs text-slate-400 shrink-0">
+                  Synced {new Date(stravaConnection.last_synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              )}
+            </div>
+
+            {stravaSyncResult !== null && (
+              <p className="text-xs text-green-700">
+                {stravaSyncResult === 0
+                  ? 'Already up to date.'
+                  : `Imported ${stravaSyncResult} new activit${stravaSyncResult === 1 ? 'y' : 'ies'}.`}
+              </p>
+            )}
+            {stravaError && <p className="text-xs text-red-500">{stravaError}</p>}
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={async () => {
+                  setStravaSyncing(true);
+                  setStravasError('');
+                  setStravaSyncResult(null);
+                  try {
+                    const count = await onStravaSync();
+                    setStravaSyncResult(count);
+                  } catch {
+                    setStravasError('Sync failed. Please try again.');
+                  } finally {
+                    setStravaSyncing(false);
+                  }
+                }}
+                disabled={stravaSyncing || stravaDisconnecting}
+                className="flex items-center gap-1.5 px-3 py-2 bg-[#FC4C02] text-white text-sm font-semibold hover:bg-orange-600 transition disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${stravaSyncing ? 'animate-spin' : ''}`} />
+                {stravaSyncing ? 'Syncing…' : 'Sync Now'}
+              </button>
+              <button
+                onClick={async () => {
+                  if (!confirm('Disconnect Strava? Imported workouts will remain.')) return;
+                  setStravaDisconnecting(true);
+                  setStravasError('');
+                  try {
+                    await onStravaDisconnect();
+                  } catch {
+                    setStravasError('Failed to disconnect. Please try again.');
+                  } finally {
+                    setStravaDisconnecting(false);
+                  }
+                }}
+                disabled={stravaSyncing || stravaDisconnecting}
+                className="flex items-center gap-1.5 px-3 py-2 border border-slate-300 text-slate-600 text-sm font-medium hover:border-slate-400 hover:bg-slate-50 transition disabled:opacity-50"
+              >
+                <Unlink className="w-3.5 h-3.5" />
+                {stravaDisconnecting ? 'Disconnecting…' : 'Disconnect'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm text-slate-500 mb-3">
+              Connect Strava to automatically import your activities. The last 3 months of
+              activities will be imported on connect, and new activities will sync each time you
+              open the app.
+            </p>
+            <button
+              onClick={() => { window.location.href = getStravaAuthUrl(); }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#FC4C02] text-white text-sm font-semibold hover:bg-orange-600 transition"
+            >
+              <Activity className="w-4 h-4" />
+              Connect Strava
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Account actions ──────────────────────────── */}
       <div className="bg-white border border-slate-200 p-5 sm:p-6">
         <h2 className="text-base font-semibold text-slate-900 mb-4">Account</h2>
         <button
