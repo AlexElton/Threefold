@@ -149,8 +149,13 @@ export function Dashboard() {
             setWorkouts(refreshed.data);
             checkRunVolumeIncrease(refreshed.data);
           }
-          // Update cached connection with new last_synced_at
-          setStravaConnection(prev => prev ? { ...prev, last_synced_at: new Date().toISOString() } : prev);
+          // Re-fetch connection so state has the latest (possibly rotated) tokens
+          const freshConn = await getStravaConnection(user.id);
+          setStravaConnection(freshConn);
+        } else {
+          // No new activities — still refresh connection state to capture any token rotation
+          const freshConn = await getStravaConnection(user.id);
+          setStravaConnection(freshConn);
         }
       } catch {
         // Strava sync failures are non-fatal; the user can retry manually
@@ -161,16 +166,21 @@ export function Dashboard() {
 
 
   const handleStravaSync = useCallback(async (): Promise<number> => {
-    if (!user || !stravaConnection) return 0;
-    const count = await syncStravaActivities(user.id, stravaConnection, true);
+    if (!user) return 0;
+    // Always re-fetch from DB to get the latest (possibly rotated) tokens
+    const freshConn = await getStravaConnection(user.id);
+    if (!freshConn) return 0;
+    setStravaConnection(freshConn);
+    const count = await syncStravaActivities(user.id, freshConn, true);
     if (count > 0) {
       await loadWorkouts();
     } else {
-      // Still update last_synced_at in state
-      setStravaConnection(prev => prev ? { ...prev, last_synced_at: new Date().toISOString() } : prev);
+      // Refresh state to capture any token rotation that happened during sync
+      const updatedConn = await getStravaConnection(user.id);
+      setStravaConnection(updatedConn);
     }
     return count;
-  }, [user, stravaConnection, loadWorkouts]);
+  }, [user, loadWorkouts]);
 
   const handleStravaDisconnect = useCallback(async () => {
     if (!user) return;

@@ -324,8 +324,10 @@ export function ProfileView({ profileData, onProfileUpdate, stravaConnection, on
                   try {
                     const count = await onStravaSync();
                     setStravaSyncResult(count);
-                  } catch {
-                    setStravasError('Sync failed. Please try again.');
+                  } catch (err) {
+                    const msg = err instanceof Error ? err.message : String(err);
+                    console.error('[Strava sync]', msg);
+                    setStravasError(`Sync failed: ${msg}`);
                   } finally {
                     setStravaSyncing(false);
                   }

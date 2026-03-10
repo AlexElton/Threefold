@@ -93,7 +93,10 @@ async function getValidAccessToken(connection: StravaConnection): Promise<string
       grant_type: 'refresh_token',
     }),
   });
-  if (!res.ok) throw new Error('Failed to refresh Strava token');
+  if (!res.ok) {
+    const body = await res.text().catch(() => res.status.toString());
+    throw new Error(`Failed to refresh Strava token (${res.status}): ${body}`);
+  }
 
   const data = await res.json();
   await supabase
@@ -247,7 +250,10 @@ export async function syncStravaActivities(
       `https://www.strava.com/api/v3/athlete/activities?after=${threeMonthsAgoUnix}&per_page=100&page=${page}`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
-    if (!res.ok) throw new Error('Failed to fetch Strava activities');
+    if (!res.ok) {
+      const body = await res.text().catch(() => res.status.toString());
+      throw new Error(`Failed to fetch Strava activities (${res.status}): ${body}`);
+    }
     const activities = (await res.json()) as Record<string, unknown>[];
     if (!activities.length) break;
     allActivities.push(...activities);
@@ -266,8 +272,9 @@ export async function syncStravaActivities(
     .eq('user_id', userId)
     .not('strava_activity_id', 'is', null);
 
-  const existingIds = new Set((existing ?? []).map(w => w.strava_activity_id as number));
-  const newActivities = supported.filter(a => !existingIds.has(a.id as number));
+  // Supabase returns bigint columns as strings; normalise to string on both sides
+  const existingIds = new Set((existing ?? []).map(w => String(w.strava_activity_id)));
+  const newActivities = supported.filter(a => !existingIds.has(String(a.id)));
 
   // ── 3. Build planned-workout lookup (date|discipline → workout id) ────────
   const { data: plannedWorkouts } = await supabase
@@ -298,7 +305,7 @@ export async function syncStravaActivities(
 
     if (matchedId) {
       // Update the planned row in place → it becomes the completed workout
-      await supabase
+      const { error: updateError } = await supabase
         .from('workouts')
         .update({
           completed: true,
@@ -315,11 +322,13 @@ export async function syncStravaActivities(
         })
         .eq('id', matchedId);
 
+      if (updateError) throw new Error(`Failed to update workout: ${updateError.message}`);
+
       // Remove slot so a second activity on the same day doesn't reuse it
       plannedMap.delete(key);
     } else {
       // No matching plan → insert as a standalone completed workout
-      await supabase.from('workouts').insert({
+      const { error: insertError } = await supabase.from('workouts').insert({
         user_id: userId,
         date,
         discipline,
@@ -339,6 +348,8 @@ export async function syncStravaActivities(
         strava_elev_gain: fields.strava_elev_gain,
         strava_avg_speed_ms: fields.strava_avg_speed_ms,
       });
+
+      if (insertError) throw new Error(`Failed to insert workout: ${insertError.message}`);
     }
 
     importedCount++;
