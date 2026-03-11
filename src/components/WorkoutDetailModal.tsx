@@ -110,8 +110,8 @@ export function WorkoutDetailModal({
     tableRows.push({ label: 'Elevation', planned: null, completed: `${Math.round(workout.strava_elev_gain)} m` });
 
   return (
-    <div className="fixed inset-0 bg-slate-900/30 flex items-center justify-center z-50 p-4">
-      <div className={`bg-white ${borderTop} shadow-sm w-full max-w-2xl`}>
+    <div className="fixed inset-0 bg-slate-900/30 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className={`bg-white ${borderTop} shadow-sm w-full max-w-2xl my-auto`}>
         {/* Colored header */}
         <div className={`${headerColor} px-4 py-3 flex items-center justify-between`}>
           <div className="flex items-center gap-2 min-w-0">
@@ -136,7 +136,7 @@ export function WorkoutDetailModal({
         <div className="p-4">
           {hasStrava ? (
             /* ── Strava layout: comparison table left, map/notes/actions right ── */
-            <div className="grid grid-cols-[3fr_2fr] gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-[3fr_2fr] gap-4">
 
               {/* ── Left: Planned vs Completed table ──────────────────── */}
               <div className="border border-slate-200 overflow-hidden self-start">
