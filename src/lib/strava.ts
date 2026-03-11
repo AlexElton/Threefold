@@ -183,6 +183,20 @@ function extractStravaFields(
   const avgSpeed = activity.average_speed as number | undefined;
   const tss = estimateTSS(movingTime, avgHR, discipline);
 
+  // Extended fields
+  const elapsedTime = activity.elapsed_time as number | undefined;
+  const sufferScore = activity.suffer_score as number | undefined;
+  const calories = activity.calories as number | undefined;
+  const cadence = activity.average_cadence as number | undefined;
+  const maxSpeed = activity.max_speed as number | undefined;
+  const weightedAvgWatts = activity.weighted_average_watts as number | undefined;
+  const maxWatts = activity.max_watts as number | undefined;
+  const kilojoules = activity.kilojoules as number | undefined;
+  const deviceWatts = activity.device_watts as boolean | undefined;
+  const poolLength = activity.pool_length as number | undefined;
+  const mapData = activity.map as Record<string, unknown> | undefined;
+  const polyline = mapData?.summary_polyline as string | undefined;
+
   return {
     user_id: userId,
     date,
@@ -200,6 +214,18 @@ function extractStravaFields(
     strava_elev_gain: elevGain ?? null,
     strava_avg_speed_ms: avgSpeed ?? null,
     intensity: estimateIntensity(avgHR, discipline),
+    // Extended fields
+    strava_elapsed_seconds: elapsedTime ?? null,
+    strava_suffer_score: sufferScore ?? null,
+    strava_calories: calories != null ? Math.round(calories) : null,
+    strava_cadence: cadence ?? null,
+    strava_max_speed_ms: maxSpeed ?? null,
+    strava_weighted_avg_watts: weightedAvgWatts ?? null,
+    strava_max_watts: maxWatts ?? null,
+    strava_kilojoules: kilojoules != null ? Math.round(kilojoules) : null,
+    strava_device_watts: deviceWatts ?? null,
+    strava_pool_length: poolLength ?? null,
+    strava_polyline: polyline && polyline.length > 0 ? polyline : null,
   };
 }
 
@@ -319,6 +345,17 @@ export async function syncStravaActivities(
           strava_avg_watts: fields.strava_avg_watts,
           strava_elev_gain: fields.strava_elev_gain,
           strava_avg_speed_ms: fields.strava_avg_speed_ms,
+          strava_elapsed_seconds: fields.strava_elapsed_seconds,
+          strava_suffer_score: fields.strava_suffer_score,
+          strava_calories: fields.strava_calories,
+          strava_cadence: fields.strava_cadence,
+          strava_max_speed_ms: fields.strava_max_speed_ms,
+          strava_weighted_avg_watts: fields.strava_weighted_avg_watts,
+          strava_max_watts: fields.strava_max_watts,
+          strava_kilojoules: fields.strava_kilojoules,
+          strava_device_watts: fields.strava_device_watts,
+          strava_pool_length: fields.strava_pool_length,
+          strava_polyline: fields.strava_polyline,
         })
         .eq('id', matchedId);
 
@@ -347,6 +384,17 @@ export async function syncStravaActivities(
         strava_avg_watts: fields.strava_avg_watts,
         strava_elev_gain: fields.strava_elev_gain,
         strava_avg_speed_ms: fields.strava_avg_speed_ms,
+        strava_elapsed_seconds: fields.strava_elapsed_seconds,
+        strava_suffer_score: fields.strava_suffer_score,
+        strava_calories: fields.strava_calories,
+        strava_cadence: fields.strava_cadence,
+        strava_max_speed_ms: fields.strava_max_speed_ms,
+        strava_weighted_avg_watts: fields.strava_weighted_avg_watts,
+        strava_max_watts: fields.strava_max_watts,
+        strava_kilojoules: fields.strava_kilojoules,
+        strava_device_watts: fields.strava_device_watts,
+        strava_pool_length: fields.strava_pool_length,
+        strava_polyline: fields.strava_polyline,
       });
 
       if (insertError) throw new Error(`Failed to insert workout: ${insertError.message}`);

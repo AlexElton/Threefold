@@ -1,6 +1,7 @@
 import { X, Pencil, Trash2 } from 'lucide-react';
 import { Workout, INTENSITY_LABELS, DISCIPLINE_LABELS } from '../types';
 import { Bike, Droplets, Footprints, Dumbbell } from 'lucide-react';
+import { RouteMap } from './RouteMap';
 
 interface WorkoutDetailModalProps {
   isOpen: boolean;
@@ -59,14 +60,22 @@ export function WorkoutDetailModal({
   const hasStrava = !!workout.strava_activity_id;
 
   const formatSpeed = (ms: number) => `${(ms * 3.6).toFixed(1)} km/h`;
-  const formatPace = (ms: number) => {
+  const formatRunPace = (ms: number) => {
     const secsPerKm = 1000 / ms;
     const mins = Math.floor(secsPerKm / 60);
     const secs = Math.round(secsPerKm % 60);
     return `${mins}:${String(secs).padStart(2, '0')} /km`;
   };
+  const formatSwimPace = (ms: number) => {
+    const secsPer100m = 100 / ms;
+    const mins = Math.floor(secsPer100m / 60);
+    const secs = Math.round(secsPer100m % 60);
+    return `${mins}:${String(secs).padStart(2, '0')} /100m`;
+  };
 
-  // Build comparison table rows
+  const d = workout.discipline;
+
+  // Build comparison table rows — discipline-aware
   const tableRows: TableRow[] = [
     {
       label: 'Duration',
@@ -85,29 +94,74 @@ export function WorkoutDetailModal({
     },
   ];
 
-  if (hasStrava && workout.distance_km != null)
+  // Total (elapsed) time if it differs from moving time
+  if (workout.strava_elapsed_seconds != null && workout.actual_duration_minutes != null) {
+    const elapsedMin = Math.round(workout.strava_elapsed_seconds / 60);
+    if (elapsedMin !== workout.actual_duration_minutes)
+      tableRows.push({ label: 'Total Time', planned: null, completed: `${elapsedMin} min` });
+  }
+
+  // Distance — all sports except strength
+  if (d !== 'strength' && workout.distance_km != null)
     tableRows.push({ label: 'Distance', planned: null, completed: `${workout.distance_km.toFixed(1)} km` });
 
-  if (workout.strava_avg_speed_ms != null)
-    tableRows.push({
-      label: workout.discipline === 'run' ? 'Pace' : 'Avg Speed',
-      planned: null,
-      completed: workout.discipline === 'run'
-        ? formatPace(workout.strava_avg_speed_ms)
-        : formatSpeed(workout.strava_avg_speed_ms),
-    });
+  // Speed / Pace
+  if (d === 'run' && workout.strava_avg_speed_ms != null) {
+    tableRows.push({ label: 'Avg Pace', planned: null, completed: formatRunPace(workout.strava_avg_speed_ms) });
+    if (workout.strava_max_speed_ms != null)
+      tableRows.push({ label: 'Best Pace', planned: null, completed: formatRunPace(workout.strava_max_speed_ms) });
+  }
+  if (d === 'swim' && workout.strava_avg_speed_ms != null)
+    tableRows.push({ label: 'Avg Pace', planned: null, completed: formatSwimPace(workout.strava_avg_speed_ms) });
+  if (d === 'bike' && workout.strava_avg_speed_ms != null)
+    tableRows.push({ label: 'Avg Speed', planned: null, completed: formatSpeed(workout.strava_avg_speed_ms) });
 
+  // Power — bike only
+  if (d === 'bike') {
+    if (workout.strava_weighted_avg_watts != null)
+      tableRows.push({
+        label: workout.strava_device_watts === false ? 'NP (est.)' : 'Norm. Power',
+        planned: null,
+        completed: `${Math.round(workout.strava_weighted_avg_watts)} W`,
+      });
+    if (workout.strava_avg_watts != null)
+      tableRows.push({
+        label: workout.strava_device_watts === false ? 'Avg Power (est.)' : 'Avg Power',
+        planned: null,
+        completed: `${Math.round(workout.strava_avg_watts)} W`,
+      });
+    if (workout.strava_max_watts != null)
+      tableRows.push({ label: 'Max Power', planned: null, completed: `${Math.round(workout.strava_max_watts)} W` });
+    if (workout.strava_kilojoules != null)
+      tableRows.push({ label: 'Work', planned: null, completed: `${workout.strava_kilojoules} kJ` });
+  }
+
+  // Cadence — run, bike, swim (not strength)
+  if (d !== 'strength' && workout.strava_cadence != null) {
+    const cadenceLabel = d === 'swim' ? 'Stroke Rate' : 'Cadence';
+    const cadenceUnit = d === 'swim' ? 'spm' : 'rpm';
+    tableRows.push({ label: cadenceLabel, planned: null, completed: `${Math.round(workout.strava_cadence)} ${cadenceUnit}` });
+  }
+
+  // Pool length — swim only
+  if (d === 'swim' && workout.strava_pool_length != null)
+    tableRows.push({ label: 'Pool Length', planned: null, completed: `${workout.strava_pool_length} m` });
+
+  // Heart rate — all sports
   if (workout.strava_avg_hr != null)
     tableRows.push({ label: 'Avg HR', planned: null, completed: `${Math.round(workout.strava_avg_hr)} bpm` });
-
   if (workout.strava_max_hr != null)
     tableRows.push({ label: 'Max HR', planned: null, completed: `${Math.round(workout.strava_max_hr)} bpm` });
 
-  if (workout.strava_avg_watts != null)
-    tableRows.push({ label: 'Avg Power', planned: null, completed: `${Math.round(workout.strava_avg_watts)} W` });
-
-  if (workout.strava_elev_gain != null)
+  // Elevation — run and bike only
+  if ((d === 'run' || d === 'bike') && workout.strava_elev_gain != null)
     tableRows.push({ label: 'Elevation', planned: null, completed: `${Math.round(workout.strava_elev_gain)} m` });
+
+  // Universal effort indicators
+  if (workout.strava_calories != null)
+    tableRows.push({ label: 'Calories', planned: null, completed: `${workout.strava_calories} kcal` });
+  if (workout.strava_suffer_score != null)
+    tableRows.push({ label: 'Relative Effort', planned: null, completed: `${workout.strava_suffer_score}` });
 
   return (
     <div className="fixed inset-0 bg-slate-900/30 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -171,9 +225,15 @@ export function WorkoutDetailModal({
 
               {/* ── Right: Map + Notes + Actions ──────────────────────── */}
               <div className="flex flex-col gap-3">
-                {/* Map placeholder */}
-                <div className="bg-slate-100 border border-slate-200 h-36 flex items-center justify-center text-slate-400 text-xs font-medium shrink-0">
-                  Map coming soon
+                {/* Route map */}
+                <div className="border border-slate-200 h-48 overflow-hidden shrink-0">
+                  {workout.strava_polyline ? (
+                    <RouteMap polyline={workout.strava_polyline} className="h-full" />
+                  ) : (
+                    <div className="h-full bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-medium">
+                      No route data
+                    </div>
+                  )}
                 </div>
 
                 {/* Notes */}

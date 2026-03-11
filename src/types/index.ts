@@ -25,6 +25,17 @@ export interface Workout {
   strava_avg_watts: number | null;
   strava_elev_gain: number | null;
   strava_avg_speed_ms: number | null;
+  strava_elapsed_seconds: number | null;
+  strava_suffer_score: number | null;
+  strava_calories: number | null;
+  strava_cadence: number | null;
+  strava_max_speed_ms: number | null;
+  strava_weighted_avg_watts: number | null;
+  strava_max_watts: number | null;
+  strava_kilojoules: number | null;
+  strava_device_watts: boolean | null;
+  strava_pool_length: number | null;
+  strava_polyline: string | null;
   created_at: string;
   updated_at: string;
 }
