@@ -1,28 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from './contexts/AuthContext';
-import { Auth } from './components/Auth';
-import { Dashboard } from './components/Dashboard';
-import { LandingPage } from './components/LandingPage';
-import { exchangeStravaCode, syncStravaActivities } from './lib/strava';
-
-// Detect whether the current URL contains a Strava OAuth callback
-function extractStravaCode(): { code: string; scope: string } | null {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  const scope = params.get('scope');
-  if (code && scope?.includes('activity')) return { code, scope };
-  return null;
-}
+import { useAuth } from '@/hooks/useAuth';
+import { AuthPage } from '@/pages/AuthPage';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { LandingPage } from '@/pages/LandingPage';
+import { exchangeStravaCode, syncStravaActivities } from '@/services/strava';
+import { extractStravaCallback } from '@/utils/strava';
 
 function App() {
   const { user, loading } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
-  const [stravaCallbackPending, setStravaCallbackPending] = useState(() => !!extractStravaCode());
+  const [stravaCallbackPending, setStravaCallbackPending] = useState(() => !!extractStravaCallback());
 
   useEffect(() => {
     if (!user || !stravaCallbackPending) return;
 
-    const callback = extractStravaCode();
+    const callback = extractStravaCallback();
     if (!callback) { setStravaCallbackPending(false); return; }
 
     // Clear the OAuth params from the URL immediately
@@ -48,8 +40,8 @@ function App() {
     );
   }
 
-  if (user) return <Dashboard />;
-  if (authMode) return <Auth onBack={() => setAuthMode(null)} initialMode={authMode} />;
+  if (user) return <DashboardPage />;
+  if (authMode) return <AuthPage onBack={() => setAuthMode(null)} initialMode={authMode} />;
   return <LandingPage onSignIn={() => setAuthMode('login')} onGetStarted={() => setAuthMode('signup')} />;
 }
 

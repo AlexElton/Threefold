@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import logoWithText from '../img/logo(text).png';
+import { BrandLogo } from '@/components/ui/BrandLogo';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Props {
   onBack?: () => void;
   initialMode?: 'login' | 'signup';
 }
 
-export function Auth({ onBack, initialMode = 'login' }: Props) {
+export function AuthPage({ onBack, initialMode = 'login' }: Props) {
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,7 +54,7 @@ export function Auth({ onBack, initialMode = 'login' }: Props) {
       <div className="max-w-md w-full">
         <div className="bg-white border border-slate-200 shadow-sm p-7">
           <div className="flex items-center justify-center mb-6 border-b border-slate-200 pb-4">
-            <img src={logoWithText} alt="Threefold" className="h-20 w-auto" />
+            <BrandLogo className="h-20 w-auto" />
           </div>
           <p className="text-center text-slate-600 text-sm mb-6">
             Training planning and load control

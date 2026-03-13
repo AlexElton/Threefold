@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { CalendarDays, BarChart2 } from 'lucide-react';
-import { Workout } from '../types';
+import { WorkoutCreatorPanel } from '@/features/workouts/components/WorkoutCreatorPanel';
+import type { Workout } from '@/types';
 import { Calendar } from './Calendar';
-import { WorkoutCreatorPanel } from './WorkoutCreatorPanel';
 import { WeeklySidebar } from './WeeklySidebar';
 import { VolumeAlert } from './VolumeAlert';
 

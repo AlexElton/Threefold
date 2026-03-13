@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Calendar, LogOut, Save, Edit2, X, Activity, CheckCircle, RefreshCw, Unlink } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
-import { getStravaAuthUrl } from '../lib/strava';
-import type { StravaConnection } from '../lib/strava';
+import { useAuth } from '@/hooks/useAuth';
+import { getStravaAuthUrl } from '@/services/strava';
+import { supabase } from '@/services/supabase';
+import type { StravaConnection } from '@/services/strava';
 
 interface ProfileData {
   full_name: string | null;

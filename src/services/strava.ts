@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
-import type { Discipline, Intensity } from '../types';
+import { supabase } from '@/services/supabase';
+import type { Discipline, Intensity } from '@/types';
 
 const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID as string;
 const STRAVA_CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET as string;

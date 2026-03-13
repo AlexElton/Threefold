@@ -1,5 +1,5 @@
 import { CalendarDays, TrendingUp, BarChart3, Zap, CheckCircle2, ArrowRight } from 'lucide-react';
-import logoWithText from '../img/logo(text).png';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 const FEATURES = [
   {
@@ -43,7 +43,7 @@ export function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* Navbar */}
       <header className="border-b border-slate-100 bg-white sticky top-0 z-10 shadow-sm">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
-          <img src={logoWithText} alt="Threefold" className="h-12 w-auto" />
+          <BrandLogo />
           <nav className="flex items-center gap-4">
             <button
               onClick={onSignIn}
@@ -188,7 +188,7 @@ export function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* Footer */}
       <footer className="border-t border-slate-100 bg-white">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-12 flex items-center justify-between">
-          <img src={logoWithText} alt="Threefold" className="h-8 w-auto opacity-60" />
+          <BrandLogo className="h-8 w-auto opacity-60" />
           <span className="text-xs text-slate-400">© {new Date().getFullYear()} Threefold</span>
         </div>
       </footer>
