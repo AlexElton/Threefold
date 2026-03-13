@@ -31,6 +31,8 @@ export function WorkoutCreatorPanel({
 
   const [discipline, setDiscipline] = useState<Discipline>('bike');
   const [durationInput, setDurationInput] = useState('60');
+  const [distanceInput, setDistanceInput] = useState('');
+  const [notesInput, setNotesInput] = useState('');
   const [intensity, setIntensity] = useState<Intensity>('endurance');
   const [loading, setLoading] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
@@ -41,10 +43,14 @@ export function WorkoutCreatorPanel({
     if (existingWorkout) {
       setDiscipline(existingWorkout.discipline);
       setDurationInput(String(existingWorkout.duration_minutes));
+      setDistanceInput(existingWorkout.distance_km != null ? String(existingWorkout.distance_km) : '');
+      setNotesInput(existingWorkout.notes ?? '');
       setIntensity(existingWorkout.intensity as Intensity);
     } else {
       setDiscipline('bike');
       setDurationInput('60');
+      setDistanceInput('');
+      setNotesInput('');
       setIntensity('endurance');
     }
     setIsRecurring(false);
@@ -54,7 +60,14 @@ export function WorkoutCreatorPanel({
 
   const parsedDuration = Number.parseInt(durationInput, 10);
   const duration = Number.isNaN(parsedDuration) ? 0 : parsedDuration;
+  const hasDistanceInput = distanceInput.trim() !== '';
+  const parsedDistance = hasDistanceInput ? Number.parseFloat(distanceInput) : null;
+  const distanceKm = hasDistanceInput && parsedDistance != null && !Number.isNaN(parsedDistance)
+    ? parsedDistance
+    : null;
+  const notes = notesInput.trim();
   const isDurationValid = duration > 0;
+  const isDistanceValid = !hasDistanceInput || (distanceKm !== null && distanceKm >= 0);
 
   const getIntensityOptions = () => {
     return DISCIPLINE_INTENSITY_MAP[discipline].map(value => ({
@@ -91,6 +104,7 @@ export function WorkoutCreatorPanel({
   const handleSave = async () => {
     if (!user) return;
     if (duration <= 0) return;
+    if (!isDistanceValid) return;
     if (!isEndDateValid) return;
 
     setLoading(true);
@@ -104,6 +118,8 @@ export function WorkoutCreatorPanel({
             intensity,
             duration_minutes: duration,
             tss: calculateTSS(),
+            distance_km: distanceKm,
+            notes,
           })
           .eq('id', existingWorkout.id);
 
@@ -127,6 +143,8 @@ export function WorkoutCreatorPanel({
             intensity,
             duration_minutes: weekDuration,
             tss: weekTSS,
+            distance_km: distanceKm,
+            notes,
             completed: false,
           });
           week++;
@@ -142,6 +160,8 @@ export function WorkoutCreatorPanel({
           intensity,
           duration_minutes: duration,
           tss: calculateTSS(),
+          distance_km: distanceKm,
+          notes,
           completed: false,
         });
 
@@ -167,161 +187,242 @@ export function WorkoutCreatorPanel({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/30 flex items-center justify-center z-50 p-4">
-      <div className="bg-white border border-slate-300 shadow-sm w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-slate-200 p-4 sm:p-5 flex justify-between items-start">
+    <div className="fixed inset-0 bg-slate-900/45 backdrop-blur-[1px] flex items-center justify-center z-50 p-3 sm:p-4">
+      <div className="bg-white border border-slate-300 shadow-xl w-full max-w-5xl max-h-[92vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white/95 backdrop-blur border-b border-slate-200 px-4 sm:px-6 py-4 flex items-start justify-between z-10">
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">
-              {existingWorkout ? 'Edit' : 'Create'} Workout
+            <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-slate-500">Workout Builder</p>
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 mt-0.5">
+              {existingWorkout ? 'Edit Planned Workout' : 'Create Planned Workout'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1">{formatDate(selectedDate)}</p>
+            <p className="text-sm text-slate-600 mt-1">{formatDate(selectedDate)}</p>
           </div>
-          <button onClick={onClose} className="p-2 border border-slate-300 hover:border-slate-400">
-            <X className="w-5 h-5" />
+          <button
+            onClick={onClose}
+            className="p-2 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition"
+          >
+            <X className="w-5 h-5 text-slate-700" />
           </button>
         </div>
 
-        <div className="p-4 sm:p-5 space-y-5">
-          <div>
-            <label className="font-medium text-sm sm:text-base mb-2 block text-slate-900">
-              Discipline
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {DISCIPLINE_OPTIONS.map(({ value, label, icon: Icon }) => (
-                <button
-                  key={value}
-                  onClick={() => {
-                    setDiscipline(value);
-                    const newOptions = DISCIPLINE_INTENSITY_MAP[value];
-                    if (!newOptions.includes(intensity)) {
-                      setIntensity(newOptions[0]);
-                    }
-                  }}
-                  className={`p-2 sm:p-3 border flex flex-col items-center gap-1 transition ${
-                    discipline === value
-                      ? 'border-blue-700 bg-blue-50'
-                      : 'border-slate-300 hover:border-slate-400'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="text-xs font-medium">{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="font-medium text-sm sm:text-base block mb-2 text-slate-900">
-              Duration (minutes)
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={durationInput}
-              onChange={(e) => setDurationInput(e.target.value.replace(/\D/g, ''))}
-              className="w-full border border-slate-300 p-2 sm:p-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-700 focus:border-blue-700"
-            />
-          </div>
-
-          <div>
-            <label className="font-medium text-sm sm:text-base block mb-2 text-slate-900">
-              Effort / Intensity
-            </label>
-            <select
-              value={intensity}
-              onChange={(e) => setIntensity(e.target.value as Intensity)}
-              className="w-full border border-slate-300 p-2 sm:p-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-700 focus:border-blue-700"
-            >
-              {getIntensityOptions().map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200 p-3 sm:p-4 text-sm text-slate-700">
-            Estimated TSS: <span className="font-semibold text-slate-900">{calculateTSS()}</span>
-          </div>
-
-          {!existingWorkout && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border border-slate-200 bg-slate-50">
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 text-slate-600" />
-                  <span className="text-sm font-medium text-slate-900">Repeat every week</span>
-                </div>
-                <button
-                  onClick={() => setIsRecurring(v => !v)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                    isRecurring ? 'bg-blue-700' : 'bg-slate-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                      isRecurring ? 'translate-x-4.5' : 'translate-x-0.5'
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 sm:gap-5 p-4 sm:p-6">
+          <div className="space-y-4 sm:space-y-5">
+            <section className="border border-slate-200 bg-slate-50/50 p-4 sm:p-5">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600 mb-3">Workout Type</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {DISCIPLINE_OPTIONS.map(({ value, label, icon: Icon }) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      setDiscipline(value);
+                      const newOptions = DISCIPLINE_INTENSITY_MAP[value];
+                      if (!newOptions.includes(intensity)) {
+                        setIntensity(newOptions[0]);
+                      }
+                    }}
+                    className={`px-3 py-3 border text-left transition ${
+                      discipline === value
+                        ? 'border-blue-700 bg-blue-50 text-blue-900'
+                        : 'border-slate-300 bg-white hover:border-slate-400 text-slate-700'
                     }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4" />
+                      <span className="text-sm font-semibold">{label}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="border border-slate-200 p-4 sm:p-5">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600 mb-3">Targets</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 block mb-1.5">
+                    Duration (minutes)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={durationInput}
+                    onChange={(e) => setDurationInput(e.target.value.replace(/\D/g, ''))}
+                    className="w-full border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-700 focus:border-blue-700"
                   />
-                </button>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 block mb-1.5">
+                    Distance (km)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={distanceInput}
+                    onChange={(e) => {
+                      const sanitized = e.target.value
+                        .replace(/,/g, '.')
+                        .replace(/[^0-9.]/g, '')
+                        .replace(/\.(?=.*\.)/g, '');
+                      setDistanceInput(sanitized);
+                    }}
+                    placeholder="Optional"
+                    className="w-full border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-700 focus:border-blue-700"
+                  />
+                </div>
               </div>
 
-              {isRecurring && (
-                <>
-                  <div className="flex items-center justify-between p-3 border border-slate-200 bg-slate-50">
-                    <div>
-                      <span className="text-sm font-medium text-slate-900">Increase duration by 10% each week</span>
-                      <p className="text-xs text-slate-500 mt-0.5">Week 1: {duration} min → Week 2: {Math.round(duration * 1.1)} min → Week 3: {Math.round(duration * 1.21)} min…</p>
-                    </div>
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
+                  Effort / Intensity
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {getIntensityOptions().map((opt) => (
                     <button
-                      onClick={() => setIncreaseByTen(v => !v)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-                        increaseByTen ? 'bg-blue-700' : 'bg-slate-300'
+                      key={opt.value}
+                      onClick={() => setIntensity(opt.value as Intensity)}
+                      className={`px-2.5 py-2 border text-sm font-medium transition ${
+                        intensity === opt.value
+                          ? 'border-blue-700 bg-blue-50 text-blue-900'
+                          : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
                       }`}
                     >
-                      <span
-                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                          increaseByTen ? 'translate-x-4.5' : 'translate-x-0.5'
-                        }`}
-                      />
+                      {opt.label}
                     </button>
-                  </div>
+                  ))}
+                </div>
+              </div>
+            </section>
 
-                  <div>
-                    <label className="font-medium text-sm block mb-1.5 text-slate-900">
-                      End date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={endDate}
-                      min={addWeeks(selectedDate, 1)}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full border border-slate-300 p-2 sm:p-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-700 focus:border-blue-700"
+            <section className="border border-slate-200 p-4 sm:p-5">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600 mb-2">Comments</h3>
+              <textarea
+                value={notesInput}
+                onChange={(e) => setNotesInput(e.target.value)}
+                rows={4}
+                placeholder="Add workout notes, cues, objectives, or execution details"
+                className="w-full border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-700 focus:border-blue-700 resize-y"
+              />
+            </section>
+
+            {!existingWorkout && (
+              <section className="border border-slate-200 p-4 sm:p-5 space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Repeats</h3>
+
+                <div className="flex items-center justify-between p-3 border border-slate-200 bg-slate-50">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-slate-600" />
+                    <span className="text-sm font-medium text-slate-900">Repeat every week</span>
+                  </div>
+                  <button
+                    onClick={() => setIsRecurring(v => !v)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                      isRecurring ? 'bg-blue-700' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                        isRecurring ? 'translate-x-4.5' : 'translate-x-0.5'
+                      }`}
                     />
-                    {endDate && endDate > selectedDate && (
-                      <p className="text-xs text-slate-500 mt-1">
-                        {Math.floor((new Date(endDate).getTime() - new Date(selectedDate + 'T00:00:00').getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1} workout{Math.floor((new Date(endDate).getTime() - new Date(selectedDate + 'T00:00:00').getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1 !== 1 ? 's' : ''} will be created
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+                  </button>
+                </div>
 
-          <button
-            onClick={handleSave}
-            disabled={loading || !isDurationValid || !isEndDateValid}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white py-2.5 sm:py-3 font-medium transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-          >
-            {loading
-              ? 'Saving...'
-              : !isDurationValid
-              ? 'Enter Duration'
-              : isRecurring && !endDate
-              ? 'Select an End Date'
-              : 'Save Workout'}
-          </button>
+                {isRecurring && (
+                  <>
+                    <div className="flex items-center justify-between p-3 border border-slate-200 bg-slate-50">
+                      <div>
+                        <span className="text-sm font-medium text-slate-900">Increase duration by 10% each week</span>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Week 1: {duration} min | Week 2: {Math.round(duration * 1.1)} min | Week 3: {Math.round(duration * 1.21)} min
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setIncreaseByTen(v => !v)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                          increaseByTen ? 'bg-blue-700' : 'bg-slate-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                            increaseByTen ? 'translate-x-4.5' : 'translate-x-0.5'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 block mb-1.5">
+                        End date <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        min={addWeeks(selectedDate, 1)}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-700 focus:border-blue-700"
+                      />
+                      {endDate && endDate > selectedDate && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          {Math.floor((new Date(endDate).getTime() - new Date(selectedDate + 'T00:00:00').getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1} workout{Math.floor((new Date(endDate).getTime() - new Date(selectedDate + 'T00:00:00').getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1 !== 1 ? 's' : ''} will be created
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
+              </section>
+            )}
+          </div>
+
+          <aside className="border border-slate-200 bg-slate-50 p-4 sm:p-5 h-fit lg:sticky lg:top-[92px]">
+            <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-slate-500 mb-2">Summary</p>
+            <div className="space-y-2.5 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Discipline</span>
+                <span className="font-semibold text-slate-900 capitalize">{discipline}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Intensity</span>
+                <span className="font-semibold text-slate-900">{INTENSITY_LABELS[intensity]}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Duration</span>
+                <span className="font-semibold text-slate-900">{duration > 0 ? `${duration} min` : 'Not set'}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Distance</span>
+                <span className="font-semibold text-slate-900">{distanceKm != null ? `${distanceKm} km` : 'Optional'}</span>
+              </div>
+            </div>
+
+            <div className="mt-4 border border-slate-200 bg-white p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Estimated Load</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{calculateTSS()} TSS</p>
+            </div>
+
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Comments Preview</p>
+              <p className="text-sm text-slate-600 min-h-[40px] line-clamp-3">
+                {notes || 'No comments added'}
+              </p>
+            </div>
+
+            <button
+              onClick={handleSave}
+              disabled={loading || !isDurationValid || !isDistanceValid || !isEndDateValid}
+              className="w-full mt-5 bg-blue-700 hover:bg-blue-800 text-white py-3 font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              {loading
+                ? 'Saving...'
+                : !isDurationValid
+                ? 'Enter Duration'
+                : !isDistanceValid
+                ? 'Enter Valid Km'
+                : isRecurring && !endDate
+                ? 'Select an End Date'
+                : 'Save Workout'}
+            </button>
+          </aside>
         </div>
       </div>
     </div>
