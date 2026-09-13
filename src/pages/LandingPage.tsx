@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { CalendarDays, TrendingUp, BarChart3, Zap, CheckCircle2, ArrowRight } from 'lucide-react';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 
@@ -32,12 +33,8 @@ const DISCIPLINES = [
   { label: 'Strength', color: 'bg-violet-500' },
 ];
 
-interface Props {
-  onGetStarted: () => void;
-  onSignIn: () => void;
-}
-
-export function LandingPage({ onGetStarted, onSignIn }: Props) {
+export function LandingPage() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Navbar */}
@@ -46,13 +43,13 @@ export function LandingPage({ onGetStarted, onSignIn }: Props) {
           <BrandLogo />
           <nav className="flex items-center gap-4">
             <button
-              onClick={onSignIn}
+              onClick={() => navigate('/login')}
               className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               Sign in
             </button>
             <button
-              onClick={onGetStarted}
+              onClick={() => navigate('/signup')}
               className="text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 transition-colors"
             >
               Get started
@@ -82,14 +79,14 @@ export function LandingPage({ onGetStarted, onSignIn }: Props) {
 
         <div className="mt-9 flex flex-col sm:flex-row items-center gap-3">
           <button
-            onClick={onGetStarted}
+            onClick={() => navigate('/signup')}
             className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold px-7 py-3 transition-colors shadow-sm"
           >
             Get started — it's free
             <ArrowRight className="w-4 h-4" />
           </button>
           <button
-            onClick={onSignIn}
+            onClick={() => navigate('/login')}
             className="text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors"
           >
             Already have an account? Sign in
@@ -177,7 +174,7 @@ export function LandingPage({ onGetStarted, onSignIn }: Props) {
           Create your free account in seconds. No credit card required.
         </p>
         <button
-          onClick={onGetStarted}
+          onClick={() => navigate('/signup')}
           className="inline-flex items-center gap-2 bg-white text-blue-700 hover:bg-blue-50 font-semibold px-7 py-3 transition-colors shadow-sm"
         >
           Get started for free

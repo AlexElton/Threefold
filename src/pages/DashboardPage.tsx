@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, CalendarDays, BarChart3, User } from 'lucide-react';
 import { AnalyticsView } from '@/features/analytics/components/AnalyticsView';
 import { CalendarView } from '@/features/calendar/components/CalendarView';
@@ -29,8 +30,15 @@ const NAV_ITEMS: { page: Page; label: string; icon: React.ElementType }[] = [
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [page, setPage] = useState<Page>('dashboard');
+  const currentPage = (location.pathname.split('/')[2] || 'dashboard') as Page;
+  const [page, setPage] = useState<Page>(currentPage);
+
+  useEffect(() => {
+    setPage(currentPage);
+  }, [currentPage]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -206,11 +214,6 @@ export function DashboardPage() {
     setIsCreatorOpen(true);
   };
 
-  const navigate = (p: Page) => {
-    setPage(p);
-    setIsMobileMenuOpen(false);
-  };
-
   useEffect(() => { loadWorkouts(); }, [loadWorkouts]);
 
   if (loading) {
@@ -226,7 +229,7 @@ export function DashboardPage() {
       activePage={page}
       isMobileMenuOpen={isMobileMenuOpen}
       navItems={NAV_ITEMS}
-      onNavigate={navigate}
+      onNavigate={(p) => navigate(`/dashboard/${p === 'dashboard' ? '' : p}`)}
       onToggleMobileMenu={() => setIsMobileMenuOpen(v => !v)}
     >
         {page === 'dashboard' && <DashboardView workouts={workouts} profileName={profileData?.full_name ?? null} />}

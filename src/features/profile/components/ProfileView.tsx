@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Calendar, LogOut, Save, Edit2, X, Activity, CheckCircle, RefreshCw, Unlink } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { getStravaAuthUrl } from '@/services/strava';
@@ -29,6 +30,7 @@ interface ProfileViewProps {
 
 export function ProfileView({ profileData, onProfileUpdate, stravaConnection, onStravaDisconnect, onStravaSync }: ProfileViewProps) {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<LifetimeStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -381,7 +383,7 @@ export function ProfileView({ profileData, onProfileUpdate, stravaConnection, on
       <div className="bg-white border border-slate-200 p-5 sm:p-6">
         <h2 className="text-base font-semibold text-slate-900 mb-4">Account</h2>
         <button
-          onClick={signOut}
+          onClick={async () => { await signOut(); navigate('/'); }}
           className="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-2 px-4 py-3 sm:py-2.5 border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 hover:border-red-300 transition"
         >
           <LogOut className="w-4 h-4" />
