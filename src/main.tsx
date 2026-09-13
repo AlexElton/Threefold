@@ -7,10 +7,9 @@ import '@/styles/index.css';
 import { AuthProvider } from '@/features/auth/context/AuthContext';
 
 // Initialize Application Insights
-const appInsights = new ApplicationInsights({
+export const appInsights = new ApplicationInsights({
   config: {
     connectionString: import.meta.env.VITE_APPINSIGHTS_CONNECTION_STRING,
-    enableAutoRouteTracking: true,
   },
 });
 

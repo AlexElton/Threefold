@@ -5,11 +5,19 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { LandingPage } from '@/pages/LandingPage';
 import { exchangeStravaCode, syncStravaActivities } from '@/services/strava';
 import { extractStravaCallback } from '@/utils/strava';
+import { appInsights } from './main';
 
 function App() {
   const { user, loading } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
   const [stravaCallbackPending, setStravaCallbackPending] = useState(() => !!extractStravaCallback());
+
+  // Track page views based on app state
+  useEffect(() => {
+    if (loading) return;
+    const pageName = user ? 'dashboard' : authMode ? `auth-${authMode}` : 'landing';
+    appInsights.trackPageView({ name: pageName });
+  }, [user, authMode, loading]);
 
   useEffect(() => {
     if (!user || !stravaCallbackPending) return;

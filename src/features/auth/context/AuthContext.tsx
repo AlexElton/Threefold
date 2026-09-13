@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState, ReactNode } from 'react';
 import { AuthError, User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/services/supabase';
+import { appInsights } from '@/main';
 
 interface AuthContextType {
   user: User | null;
@@ -58,11 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
+    if (!error) {
+      appInsights.trackEvent({ name: 'UserSignedIn' });
+    }
     return { error };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    appInsights.trackEvent({ name: 'UserSignedOut' });
   };
 
   const value = {
