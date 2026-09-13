@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "start": "npx serve dist -s -l ${PORT:-3000}"
   },
   "dependencies": {
     "@mapbox/polyline": "^1.2.1",
