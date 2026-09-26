@@ -1,6 +1,6 @@
 import { Clock, Zap, Dumbbell, TrendingUp, TrendingDown, CalendarDays, CheckCircle2, Circle } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { Workout } from '../types';
+import { useAuth } from '@/hooks/useAuth';
+import type { Workout } from '@/types';
 
 const DISCIPLINE_COLORS: Record<string, string> = {
   swim: '#0284c7',

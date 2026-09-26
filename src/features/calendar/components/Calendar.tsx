@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, X, Bike, Droplets, Footprints, Dumbbell, CheckCircle2 } from 'lucide-react';
-import { Workout, Discipline } from '../types';
-import { WorkoutCard } from './WorkoutCard';
+import { WorkoutCard } from '@/features/workouts/components/WorkoutCard';
+import type { Workout, Discipline } from '@/types';
 
 interface CalendarProps {
   workouts: Workout[];

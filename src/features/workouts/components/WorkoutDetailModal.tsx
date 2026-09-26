@@ -1,6 +1,7 @@
 import { X, Pencil, Trash2 } from 'lucide-react';
-import { Workout, INTENSITY_LABELS, DISCIPLINE_LABELS } from '../types';
 import { Bike, Droplets, Footprints, Dumbbell } from 'lucide-react';
+import { DISCIPLINE_LABELS, INTENSITY_LABELS } from '@/types';
+import type { Workout } from '@/types';
 import { RouteMap } from './RouteMap';
 
 interface WorkoutDetailModalProps {

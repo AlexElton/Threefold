@@ -1,0 +1,60 @@
+name: Build and deploy Docker image to Azure Web App
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+env:
+  ACR_NAME: crthreefolddev
+  IMAGE_NAME: threefold
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ACR_NAME }}.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+            VITE_STRAVA_CLIENT_ID=${{ secrets.VITE_STRAVA_CLIENT_ID }}
+            VITE_STRAVA_CLIENT_SECRET=${{ secrets.VITE_STRAVA_CLIENT_SECRET }}
+            VITE_APPINSIGHTS_CONNECTION_STRING=${{ secrets.VITE_APPINSIGHTS_CONNECTION_STRING }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_1B12C9DB0DBF4842A42645AF6CC18FCC }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A35DAAF9D2924698A46FA75585B61627 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BBBCA78E9EF04FDCB631DF44196B22A9 }}
+
+      - name: Deploy to Azure Web App (Container)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'threefold-dev-web'
+          images: '${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest'
+          

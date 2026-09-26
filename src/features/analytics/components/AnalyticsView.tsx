@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { Workout } from '../types';
+import type { Workout } from '@/types';
 
 export function AnalyticsView({ workouts }: { workouts: Workout[] }) {
 

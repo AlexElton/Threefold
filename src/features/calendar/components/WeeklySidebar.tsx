@@ -1,5 +1,5 @@
 import { Clock, Target, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Workout } from '../types';
+import type { Workout } from '@/types';
 
 interface WeeklySidebarProps {
   workouts: Workout[];

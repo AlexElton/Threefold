@@ -1,5 +1,5 @@
 import { Bike, Droplets, Footprints, Dumbbell } from 'lucide-react';
-import { Workout, Discipline } from '../types';
+import type { Workout, Discipline } from '@/types';
 
 interface WorkoutCardProps {
   workout: Workout;
